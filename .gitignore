@@ -1,0 +1,25 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# LaTeX garbage #
+*.log
+*.aux
+*.make
+*.d
+*.fls
+*.log
+*.out
+*.pdf
+*.temp
+*.dvi
+*.ps
+*.epsi
+
+# Emacs / Vim temporaries #
+\#*
+.*.swp
+*~

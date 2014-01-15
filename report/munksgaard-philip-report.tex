@@ -1,0 +1,165 @@
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[top=3cm,left=3cm]{geometry}
+
+\usepackage{fancyhdr}  % page headers
+\usepackage{graphicx}  % \includegraphics
+\usepackage{xcolor}    % \definecolor
+\usepackage{colortbl}  % for colouring tables
+\usepackage{cite}      % \cite formatting
+\usepackage{url}       % \hyperref, \url, \href
+\usepackage{hyperref}  % references become hyperlinks
+\usepackage{mathtools} % amsmath++
+\usepackage{tikz}      % graphs
+\usepackage{epsfig}    % .epsi graphics
+\usepackage{subcaption}
+
+\usepackage{microtype} % better linebreaking
+\usepackage{eso-pic}   % alternative to ku-forside
+\usepackage{libertine} % nice regular font
+\usepackage[scaled=0.83]{inconsolata} % nice teletype font
+\usepackage{array}     % extensible array, tabular
+\usepackage{parskip}   % paragraphs 
+
+\usepackage{fancyvrb}  % Use verbatim as: !this!
+\DefineShortVerb{\!}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Code excerpts
+\usepackage{listings}
+
+\definecolor{Brown}{cmyk}{0,0.81,1,0.60}
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{CadetBlue}{cmyk}{0.62,0.57,0.23,0}
+\definecolor{lightlightgray}{gray}{0.9}
+
+\lstset{ %
+  backgroundcolor=\color{lightlightgray},
+  basicstyle=\scriptsize\ttfamily,
+  breakatwhitespace=false,
+  breaklines=false,
+  language=matlab,
+  deletekeywords={mean},
+  morekeywords={rep, seq, rnorm, cbind},
+  escapeinside={\%*}{*)}, % add LaTeX code inside code. example: val x%*$_1$*) = 42
+  extendedchars=true,
+  frame=none,
+  numbers=left,
+  numbersep=5pt,
+  numberstyle=\tiny\color{gray},
+  commentstyle=\color{gray},
+  keywordstyle=\color{OliveGreen},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stepnumber=1,
+  tabsize=4,
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\setlength\parskip{1em}
+%\setlength{\parindent}{0pt}
+\def\arraystretch{2}
+
+\title{
+  \vspace{5em}
+  Principles of Computer Systems Design \\
+  Final Exam
+}
+
+\author{%
+  \begin{tabular}{l l l}
+    Philip Munksgaard & 1989-07-24 & pmunksgaard@gmail.com
+  \end{tabular}
+}
+
+\date{\today}
+
+\begin{document}
+
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{ku-farve}}}
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{nat-en}}}
+
+\clearpage
+\maketitle
+
+\thispagestyle{empty}
+
+\newpage
+
+\fancyhead[LO,RE]{Philip Munksgaard}
+\fancyhead[LE,RO]{PCSD, Final Exam \\ \today }
+\pagestyle{fancy}
+
+\section*{Programming Part}
+
+\subsection*{Description of the Implementation}
+
+First of all, I have decided to move the provided classes and
+interfaces, as well as any classes I've made, into appropriate
+subfolders and -packages, so as to provide for a cleaner, less
+clutterede system organization.
+
+\subsection*{Question 1}
+
+%% Overall implementation of OrderManager and ItemSupplier, including
+%% the following:
+
+%% - Considering your use of logging, what RPC semantics are
+%% effectively implemented between clients and OrderManager or
+%% ItemSupplier? What RPC semantics are effectively implemented
+%% between OrderManager and ItemSupplier? Explain.
+
+%% - How did you make workflow processing asynchronous at the
+%% OrderManager?
+
+%% - How did you handle failures of individual components? In
+%% particular, how do you handle failure propagation?
+
+
+\subsection*{Question 2}
+
+%% An ItemSupplier executes operations originated at multiple
+%% instances of OrderManager as well as local clients. Describe how
+%% you ensured atomocity of the operations. Mention the following:
+
+%% Which method did you use to ensure serializability at each item
+%% supplier?
+
+%% Argue for the correctness of your method.
+
+%% Argue for the performance of your model.
+
+
+\subsection*{Question 3}
+
+%% How would you recover from a failure of an OrderManager or an
+%% ItemSupplier? For each of the two scenarios, explain necessary
+%% interaction with other components to archieve recovery, how you
+%% would use the log, why it is sufficient.
+
+
+\subsection*{Question 4}
+
+%% Describe your high-level strategy to test your
+%% implementation. Mention the following:
+
+%% How you tested execution workflows by the OrderManager, considering
+%% asynchronicity of execution.
+
+%% How you tested operations were atomic at the ItemSupplier
+
+%% How you tested error conditions and failures of multiple comonents.
+
+
+\subsection*{Question 5}
+
+%% Design, describe and execute an experiment that shows how your
+%% implementation of a single ItemSupplier behaves as concurrency is
+%% increased. Mention: Setup, Results. Also figures.
+
+\end{document}
