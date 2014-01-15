@@ -1,0 +1,6 @@
+* CertainItemSupplier
+
+ - Måske skal executeStep ikke være så kritisk? Bare tilføje nye keys
+   til map hvis de kommer? Ellers skal vi nok smide en
+   InvalidItemException i stedet for OrderProcessingException i nogle
+   af tilfældene.
