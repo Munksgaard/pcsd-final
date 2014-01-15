@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 import com.acertainsupplychain.interfaces.ItemSupplier;
 import com.acertainsupplychain.utils.OrderProcessingException;
@@ -75,7 +76,19 @@ public class CertainItemSupplier implements ItemSupplier {
      * @throws InvalidItemException
      *             - if any of the item IDs is unknown to this item supplier.
      */
-    public List<ItemQuantity> getOrdersPerItem(Set<Integer> itemIds)
-        throws InvalidItemException;
+    public synchronized List<ItemQuantity> getOrdersPerItem(Set<Integer> itemIds)
+        throws InvalidItemException {
+        ArrayList<ItemQuantity> result = new ArrayList<ItemQuantity>();
+
+        for (Integer itemId : itemIds) {
+            if (!itemQuantities.containsKey(itemId)) {
+                throw new InvalidItemException("ItemId unknown: " + itemId);
+            }
+
+            result.add(new ItemQuantity(itemId, itemQuantities.get(itemId)));
+        }
+
+        return result;
+    }
 
 }
