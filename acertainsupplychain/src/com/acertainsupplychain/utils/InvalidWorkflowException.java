@@ -7,32 +7,32 @@ package com.acertainsupplychain.interfaces;
 @SuppressWarnings("serial")
 public class InvalidWorkflowException extends OrderProcessingException {
 
-	/**
-	 * Constructor based on Exception constructors.
-	 */
-	public InvalidWorkflowException() {
-		super();
-	}
+    /**
+     * Constructor based on Exception constructors.
+     */
+    public InvalidWorkflowException() {
+        super();
+    }
 
-	/**
-	 * Constructor based on Exception constructors.
-	 */
-	public InvalidWorkflowException(String message) {
-		super(message);
-	}
+    /**
+     * Constructor based on Exception constructors.
+     */
+    public InvalidWorkflowException(String message) {
+        super(message);
+    }
 
-	/**
-	 * Constructor based on Exception constructors.
-	 */
-	public InvalidWorkflowException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    /**
+     * Constructor based on Exception constructors.
+     */
+    public InvalidWorkflowException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	/**
-	 * Constructor based on Exception constructors.
-	 */
-	public InvalidWorkflowException(Throwable ex) {
-		super(ex);
-	}
+    /**
+     * Constructor based on Exception constructors.
+     */
+    public InvalidWorkflowException(Throwable ex) {
+        super(ex);
+    }
 
 }
