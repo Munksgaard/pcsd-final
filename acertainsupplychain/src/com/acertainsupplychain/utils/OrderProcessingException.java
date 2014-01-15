@@ -1,4 +1,4 @@
-package com.acertainsupplychain.interfaces;
+package com.acertainsupplychain.utils;
 
 /**
  * Represents an exception encountered during processing of order workflows.

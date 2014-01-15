@@ -1,4 +1,4 @@
-package com.acertainsupplychain.interfaces;
+package com.acertainsupplychain.utils;
 
 /**
  * This exception flags that an invalid item ID was given to an item supplier.
