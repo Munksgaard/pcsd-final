@@ -21,7 +21,9 @@ public class CertainItemSupplier implements ItemSupplier {
 
     private Map<Integer, Integer> itemQuantities;
 
-    public CertainItemSupplier(Set<Integer> itemIds) {
+    public CertainItemSupplier(int supplierId, Set<Integer> itemIds) {
+        this.supplierId = supplierId;
+
         itemQuantities = new HashMap<Integer, Integer>();
         for (Integer itemId : itemIds) {
             itemQuantities.put(itemId, 0);
