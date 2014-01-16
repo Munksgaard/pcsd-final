@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import com.acertainsupplychain.interfaces.ItemSupplier;
 import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidItemException;
+import com.acertainsupplychain.utils.LogException;
+import com.acertainsupplychain.utils.Logger;
+import com.acertainsupplychain.utils.SupplyChainUtility;
 
 /**
  * The CertainItemSupplier class is the basic implementation of the
@@ -19,11 +22,20 @@ import com.acertainsupplychain.utils.InvalidItemException;
 public class CertainItemSupplier implements ItemSupplier {
 
     private final int supplierId;
+    private final Logger logger;
 
     private Map<Integer, Integer> itemQuantities;
 
-    public CertainItemSupplier(int supplierId, Set<Integer> itemIds) {
+    public CertainItemSupplier(int supplierId, Set<Integer> itemIds)
+          throws OrderProcessingException {
         this.supplierId = supplierId;
+
+        try {
+            this.logger = new Logger("ItemSupplier" + supplierId + ".log");
+        } catch (LogException e) {
+            e.getException().printStackTrace();
+            throw new OrderProcessingException();
+        }
 
         itemQuantities = new HashMap<Integer, Integer>();
         for (Integer itemId : itemIds) {
@@ -58,6 +70,13 @@ public class CertainItemSupplier implements ItemSupplier {
                 throw new OrderProcessingException("Invalid quantity: "
                                                    + item.getQuantity());
             }
+        }
+
+        try {
+            logger.log(step);
+        } catch (LogException e) {
+            e.getException().printStackTrace();
+            throw new OrderProcessingException("Logging failed!");
         }
 
         for (ItemQuantity item : step.getItems()) {
