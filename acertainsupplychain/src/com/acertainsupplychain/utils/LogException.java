@@ -9,6 +9,7 @@ public class LogException extends Exception {
     private final Exception e;
 
     public LogException(Exception e) {
+        super(e);
         this.e = e;
     }
 
