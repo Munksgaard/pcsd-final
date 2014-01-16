@@ -7,7 +7,7 @@ LIBDIR=lib
 
 compile:
 	mkdir -p bin
-	javac -Xlint:all -d bin -cp $(LIBDIR)/*:src $(JAVAFILES)
+	javac -source 1.6 -Xlint:all -d bin -cp $(LIBDIR)/*:src $(JAVAFILES)
 
 clean:
 	rm -rvf bin
