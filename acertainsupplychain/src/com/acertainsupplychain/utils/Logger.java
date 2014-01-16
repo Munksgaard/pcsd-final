@@ -23,7 +23,7 @@ public class Logger {
 
         }
 
-        String dir = props.getProperty(SupplyChainConstants.LOG_DIR);
+        String dir = props.getProperty("logdir");
 
         // Create log directory if it doesn't already exist.
         File file = new File(dir);
