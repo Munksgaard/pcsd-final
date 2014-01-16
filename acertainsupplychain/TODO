@@ -20,3 +20,14 @@ stedet. Done.
    serialize og indlæse det.
 
  - Sikrer ikke at loggen ikke bliver overskrevet.
+
+* CertainOrderManager
+
+ - Introduceret managerId for at holde styr på log filer.
+
+* Workflow
+
+ - Introduceret Workflow klassen for at holde styr på workflows
+ - Bliver spawnet som et thread.
+ - Ingen race conditions eller lignende, Worker klassen er den eneste
+ - der skriver, og den bruges kun i den ene tråd.
