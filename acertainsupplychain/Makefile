@@ -11,3 +11,9 @@ compile:
 
 clean:
 	rm -rvf bin
+
+CertainItemSupplier:
+	java -ea -cp $(LIBDIR)/*:bin com.acertainsupplychain.business.CertainItemSupplier
+
+CertainOrderManager:
+	java -ea -cp $(LIBDIR)/*:bin com.acertainsupplychain.business.CertainOrderManager
