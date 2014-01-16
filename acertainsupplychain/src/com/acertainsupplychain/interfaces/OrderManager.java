@@ -37,7 +37,7 @@ public interface OrderManager {
      *             OrderProcessingException if you want).
      */
     public int registerOrderWorkflow(List<OrderStep> steps)
-        throws OrderProcessingException;
+      throws OrderProcessingException;
 
     /**
      * Queries the current state of a given order workflow registered with the
@@ -50,6 +50,6 @@ public interface OrderManager {
      * @throw InvalidWorkflowException - if the workflow ID given is not valid.
      */
     public List<StepStatus> getOrderWorkflowStatus(int orderWorkflowId)
-        throws InvalidWorkflowException;
+      throws InvalidWorkflowException;
 
 }

@@ -27,15 +27,10 @@ public class CertainItemSupplier implements ItemSupplier {
     private Map<Integer, Integer> itemQuantities;
 
     public CertainItemSupplier(int supplierId, Set<Integer> itemIds)
-          throws OrderProcessingException {
+      throws LogException {
         this.supplierId = supplierId;
 
-        try {
-            this.logger = new Logger("ItemSupplier" + supplierId + ".log");
-        } catch (LogException e) {
-            e.getException().printStackTrace();
-            throw new OrderProcessingException();
-        }
+        this.logger = new Logger("ItemSupplier" + supplierId + ".log");
 
         itemQuantities = new HashMap<Integer, Integer>();
         for (Integer itemId : itemIds) {
@@ -55,7 +50,7 @@ public class CertainItemSupplier implements ItemSupplier {
      *             OrderProcessingException if you want).
      */
     public synchronized void executeStep(OrderStep step)
-          throws OrderProcessingException {
+      throws OrderProcessingException {
         if (step.getSupplierId() != this.supplierId) {
             throw new OrderProcessingException("Invalid supplierId: "
                                                + step.getSupplierId());
@@ -96,18 +91,79 @@ public class CertainItemSupplier implements ItemSupplier {
      *             - if any of the item IDs is unknown to this item supplier.
      */
     public synchronized List<ItemQuantity> getOrdersPerItem(Set<Integer> itemIds)
-        throws InvalidItemException {
+      throws InvalidItemException {
         ArrayList<ItemQuantity> result = new ArrayList<ItemQuantity>();
+
 
         for (Integer itemId : itemIds) {
             if (!itemQuantities.containsKey(itemId)) {
                 throw new InvalidItemException("ItemId unknown: " + itemId);
             }
-
             result.add(new ItemQuantity(itemId, itemQuantities.get(itemId)));
         }
 
         return result;
+    }
+
+    public static void main(String[] args) {
+        try {
+            HashSet<Integer> itemIds = new HashSet<Integer>();
+            itemIds.add(42);
+            itemIds.add(43);
+            itemIds.add(2);
+
+            // Test constructor
+            CertainItemSupplier supplier = new CertainItemSupplier(1, itemIds);
+
+            List<ItemQuantity> result = supplier.getOrdersPerItem(itemIds);
+            System.out.println("Should print three empty itemQuantities: 42, 43, and 2");
+            for (ItemQuantity item : result) {
+                System.out.println(item);
+            }
+
+            // Test getOrdersPerItemId with invalid itemId
+            HashSet<Integer> itemIds2 = new HashSet<Integer>();
+            itemIds2.add(43);
+            itemIds2.add(3);
+
+            boolean flag = false;
+            try {
+                supplier.getOrdersPerItem(itemIds2);
+            } catch (InvalidItemException e) {
+                flag = true;
+            }
+            assert(flag);
+
+            ArrayList<ItemQuantity> items = new ArrayList<ItemQuantity>();
+            items.add(new ItemQuantity(42, 3));
+            items.add(new ItemQuantity(43, 7));
+            supplier.executeStep(new OrderStep(1, items));
+
+            result = supplier.getOrdersPerItem(itemIds);
+            System.out.println("Should print three itemQuantities: 42, 43, and 2. Now 42 and 43 should have some quantities");
+            for (ItemQuantity item : result) {
+                System.out.println(item);
+            }
+
+            flag = false;
+            try {
+                supplier.executeStep(new OrderStep(0, items));
+            } catch (OrderProcessingException e) {
+                flag = true;
+            }
+            assert(flag);
+
+            BufferedReader in
+                = new BufferedReader(new FileReader("logs/ItemSupplier1.log"));
+            String xml = in.readLine();
+            System.out.println(xml);
+            System.out.println(SupplyChainUtility.deserializeObject(xml));
+
+            System.out.println();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
