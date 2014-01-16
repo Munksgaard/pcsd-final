@@ -8,11 +8,15 @@ import java.lang.Runnable;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.Executors;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+
 import com.acertainsupplychain.interfaces.OrderManager;
 import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidWorkflowException;
 import com.acertainsupplychain.utils.Logger;
 import com.acertainsupplychain.utils.LogException;
+import com.acertainsupplychain.utils.SupplyChainUtility
 
 /**
  * The CertainOrderManager class is the basic implementation of the
@@ -74,6 +78,14 @@ public class CertainOrderManager implements OrderManager {
 
         Workflow workflow = new Workflow(workflowId, steps);
         Worker worker = new Worker(workflow);
+
+        try {
+            logger.log(steps);
+        } catch (LogException e) {
+            e.getException().printStackTrace();
+            throw new OrderProcessingException("Logging failed!");
+        }
+
         threadFactory.newThread(worker).start();
 
         workflows.put(workflowId, workflow);
@@ -116,7 +128,8 @@ public class CertainOrderManager implements OrderManager {
             int workflowId = orderManager.registerOrderWorkflow(steps);
             System.out.println("Got workflowId: " + workflowId);
 
-            System.out.println("Workflow status: " + orderManager.getOrderWorkflowStatus(workflowId));
+            System.out.println("Workflow status: "
+                               + orderManager.getOrderWorkflowStatus(workflowId));
 
             steps = new ArrayList<OrderStep>();
             for (int i=0; i<5; i++) {
@@ -128,7 +141,20 @@ public class CertainOrderManager implements OrderManager {
             workflowId = orderManager.registerOrderWorkflow(steps);
             System.out.println("Got workflowId: " + workflowId);
 
-            System.out.println("Workflow status: " + orderManager.getOrderWorkflowStatus(workflowId));
+            System.out.println("Workflow status: "
+                               + orderManager.getOrderWorkflowStatus(workflowId));
+
+            BufferedReader in
+                = new BufferedReader(new FileReader("logs/OrderManager1.log"));
+            String xml = in.readLine();
+            System.out.println(xml);
+            System.out.println(SupplyChainUtility.deserializeObject(xml));
+
+            xml = in.readLine();
+            System.out.println(xml);
+            System.out.println(SupplyChainUtility.deserializeObject(xml));
+
+            System.out.println();
 
         } catch (Exception e) {
             e.printStackTrace();
