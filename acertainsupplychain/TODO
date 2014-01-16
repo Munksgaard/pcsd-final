@@ -18,3 +18,5 @@ stedet. Done.
 
  - For at recover, skal den tjekke at der står noget i filen, og så
    serialize og indlæse det.
+
+ - Sikrer ikke at loggen ikke bliver overskrevet.
