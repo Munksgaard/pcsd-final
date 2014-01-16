@@ -4,3 +4,17 @@
    til map hvis de kommer? Ellers skal vi nok smide en
    InvalidItemException i stedet for OrderProcessingException i nogle
    af tilfældene.
+
+ - Flere tests?
+
+ - Flere kommentarer
+
+* Log
+
+ - Flere kommentarer, en til hver funktion.
+
+Argh, pis. java.nio.file er ikke med i java 6? Brug java.io.File i
+stedet. Done.
+
+ - For at recover, skal den tjekke at der står noget i filen, og så
+   serialize og indlæse det.
