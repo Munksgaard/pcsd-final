@@ -40,6 +40,6 @@ public interface ItemSupplier {
      *             - if any of the item IDs is unknown to this item supplier.
      */
     public List<ItemQuantity> getOrdersPerItem(Set<Integer> itemIds)
-        throws InvalidItemException;
+        throws InvalidItemException, OrderProcessingException;
 
 }

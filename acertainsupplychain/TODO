@@ -31,3 +31,14 @@ stedet. Done.
  - Bliver spawnet som et thread.
  - Ingen race conditions eller lignende, Worker klassen er den eneste
  - der skriver, og den bruges kun i den ene tråd.
+
+* ItemSupplierProxy/Server
+
+  - Antager at proxy og server køres på samme maskine. Nemhed. Kan
+    udvides
+  - Da interfacet er ret simpelt, og hver metode maksimalt kaster en
+    slags checked undtagelse, behøver vi ikke komplekse
+    request/response klasser.
+  - En proxy svarer til en server
+
+* Diverse Constants klasser og lignende.

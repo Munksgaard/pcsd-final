@@ -2,6 +2,11 @@ package com.acertainsupplychain.utils;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+
+import org.eclipse.jetty.client.ContentExchange;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpExchange;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
@@ -40,6 +45,22 @@ public class SupplyChainUtility {
     public static Object deserializeObject(String xmlObject) {
         XStream xmlStream = new XStream(new StaxDriver());
         return xmlStream.fromXML(xmlObject);
+    }
+
+    public static Object SendAndRecv(HttpClient client, ContentExchange exchange)
+     throws IOException, InterruptedException, UnsupportedEncodingException,
+            OrderProcessingException {
+        int exchangeState;
+
+        client.send(exchange);
+
+        exchangeState = exchange.waitForDone();
+
+        if (exchangeState == HttpExchange.STATUS_COMPLETED) {
+            return SupplyChainUtility.deserializeObject(exchange.getResponseContent().trim());
+        } else {
+            throw new OrderProcessingException("Communication failed!");
+        }
     }
 
 }

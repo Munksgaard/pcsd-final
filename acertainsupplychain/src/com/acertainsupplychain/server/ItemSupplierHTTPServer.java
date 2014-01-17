@@ -55,8 +55,8 @@ public class ItemSupplierHTTPServer {
 
     public static void main(String[] args) {
         // Parse command-line arguments
-        if (args.length != 1) {
-            System.out.println("Server: No port number specified.");
+        if (args.length != 2) {
+            System.out.println("Server: No port or id specified.");
             System.exit(1);
         }
 
