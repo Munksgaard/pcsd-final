@@ -45,3 +45,5 @@ stedet. Done.
   - Hvordan finder Workeren ud af adressen på itemsupplieren?
 
 * Diverse Constants klasser og lignende.
+
+* Tilføjet OrderProcessingException til getOrderWorkflowStatus og getOrdersPerItem

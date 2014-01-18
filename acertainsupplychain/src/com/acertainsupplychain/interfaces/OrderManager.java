@@ -50,6 +50,6 @@ public interface OrderManager {
      * @throw InvalidWorkflowException - if the workflow ID given is not valid.
      */
     public List<StepStatus> getOrderWorkflowStatus(int orderWorkflowId)
-      throws InvalidWorkflowException;
+      throws InvalidWorkflowException, OrderProcessingException;
 
 }
