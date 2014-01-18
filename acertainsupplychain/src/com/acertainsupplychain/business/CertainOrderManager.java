@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.lang.Thread;
 import java.lang.Runnable;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.Executors;
@@ -12,6 +13,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 
 import com.acertainsupplychain.interfaces.OrderManager;
+import com.acertainsupplychain.interfaces.ItemSupplier;
+import com.acertainsupplychain.client.ItemSupplierProxy;
 import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidWorkflowException;
 import com.acertainsupplychain.utils.Logger;
@@ -30,13 +33,17 @@ public class CertainOrderManager implements OrderManager {
     private final Logger logger;
 
     private Map<Integer, Workflow> workflows;
+    private Map<Integer, ItemSupplier> itemSuppliers;;
 
     private final ThreadFactory threadFactory;
 
     private int workflowId = 0;
 
-    public CertainOrderManager(int managerId) throws LogException  {
+    public CertainOrderManager(int managerId, Map<Integer, ItemSupplier> itemSuppliers)
+      throws LogException  {
         this.managerId = managerId;
+        this.itemSuppliers = itemSuppliers;
+
         logger = new Logger("OrderManager" + managerId + ".log");
 
         workflows = new HashMap<Integer, Workflow>();
@@ -50,13 +57,34 @@ public class CertainOrderManager implements OrderManager {
 
         private Workflow workflow;
 
-        public Worker(Workflow workflow) {
+        public Worker(Workflow workflow, Map<Integer, ItemSupplier> itemSuppliers) {
             this.workflow = workflow;
         }
 
         public void run() {
-            workflow.updateStatus(workflow.getId(), StepStatus.FAILED);
-            return;
+            List<OrderStep> steps = workflow.getSteps();
+            for (int i=0; i<steps.size(); i++) {
+                OrderStep step = steps.get(i);
+                int supplierId = step.getSupplierId();
+                if (!itemSuppliers.containsKey(supplierId)) {
+                    System.out.println("itemSuppliers indeholder ikke nøglen: " + supplierId);
+                    System.out.println(itemSuppliers);
+                    workflow.updateStatus(i, StepStatus.FAILED);
+                    break;
+                }
+
+                ItemSupplier itemSupplier = itemSuppliers.get(supplierId);
+                try {
+                    itemSupplier.executeStep(step);
+                } catch (OrderProcessingException e) {
+                    System.out.println("OrderProcessingException");
+                    e.printStackTrace();
+                    workflow.updateStatus(i, StepStatus.FAILED);
+                    break;
+                }
+
+                workflow.updateStatus(i, StepStatus.SUCCESSFUL);
+            }
         }
 
     }
@@ -76,8 +104,10 @@ public class CertainOrderManager implements OrderManager {
       throws OrderProcessingException {
         assert(!workflows.containsKey(workflowId));
 
+        assert itemSuppliers != null;
+
         Workflow workflow = new Workflow(workflowId, steps);
-        Worker worker = new Worker(workflow);
+        Worker worker = new Worker(workflow, itemSuppliers);
 
         try {
             logger.log(steps);
@@ -116,13 +146,18 @@ public class CertainOrderManager implements OrderManager {
 
     public static void main(String[] args) {
         try {
-            OrderManager orderManager = new CertainOrderManager(1);
+
+            // First a test that works.
+            Map<Integer, ItemSupplier> supplierMap = new HashMap<Integer, ItemSupplier>();
+            ItemSupplier supplier = new ItemSupplierProxy("http://localhost:8081", 1);
+            supplierMap.put(1, supplier);
+            OrderManager orderManager = new CertainOrderManager(1, supplierMap);
 
             List<OrderStep> steps = new ArrayList<OrderStep>();
             for (int i=0; i<5; i++) {
                 List<ItemQuantity> items = new ArrayList<ItemQuantity>();
-                items.add(new ItemQuantity(i+10, 42));
-                steps.add(new OrderStep(i, items));
+                items.add(new ItemQuantity(i, i+10));
+                steps.add(new OrderStep(1, items));
             }
 
             int workflowId = orderManager.registerOrderWorkflow(steps);
@@ -131,15 +166,27 @@ public class CertainOrderManager implements OrderManager {
             System.out.println("Workflow status: "
                                + orderManager.getOrderWorkflowStatus(workflowId));
 
+            Thread.sleep(4000);
+
+            System.out.println("Workflow status: "
+                               + orderManager.getOrderWorkflowStatus(workflowId));
+
+
+            // Now let's try where one of the items has an invalid item id.
             steps = new ArrayList<OrderStep>();
             for (int i=0; i<5; i++) {
                 List<ItemQuantity> items = new ArrayList<ItemQuantity>();
-                items.add(new ItemQuantity(i+10, 42));
-                steps.add(new OrderStep(i, items));
+                items.add(new ItemQuantity(i+1, i+10));
+                steps.add(new OrderStep(1, items));
             }
 
             workflowId = orderManager.registerOrderWorkflow(steps);
             System.out.println("Got workflowId: " + workflowId);
+
+            System.out.println("Workflow status: "
+                               + orderManager.getOrderWorkflowStatus(workflowId));
+
+            Thread.sleep(4000);
 
             System.out.println("Workflow status: "
                                + orderManager.getOrderWorkflowStatus(workflowId));
@@ -150,11 +197,7 @@ public class CertainOrderManager implements OrderManager {
             System.out.println(xml);
             System.out.println(SupplyChainUtility.deserializeObject(xml));
 
-            xml = in.readLine();
-            System.out.println(xml);
-            System.out.println(SupplyChainUtility.deserializeObject(xml));
-
-            System.out.println();
+            System.exit(0);
 
         } catch (Exception e) {
             e.printStackTrace();

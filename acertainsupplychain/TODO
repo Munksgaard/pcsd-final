@@ -24,6 +24,8 @@ stedet. Done.
 * CertainOrderManager
 
  - Introduceret managerId for at holde styr på log filer.
+ - Map af itemSuppliers (id -> ItemSupplierProxy)
+ - Worker klasse spawnes. Stopper hvis et step går galt.
 
 * Workflow
 
@@ -40,5 +42,6 @@ stedet. Done.
     slags checked undtagelse, behøver vi ikke komplekse
     request/response klasser.
   - En proxy svarer til en server
+  - Hvordan finder Workeren ud af adressen på itemsupplieren?
 
 * Diverse Constants klasser og lignende.
