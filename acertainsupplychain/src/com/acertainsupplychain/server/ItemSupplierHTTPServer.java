@@ -56,7 +56,7 @@ public class ItemSupplierHTTPServer {
     public static void main(String[] args) {
         // Parse command-line arguments
         if (args.length != 2) {
-            System.out.println("Server: No port or id specified.");
+            System.out.println("Usage: <port> <id>");
             System.exit(1);
         }
 
@@ -64,7 +64,7 @@ public class ItemSupplierHTTPServer {
         try {
             startServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
         } catch (NumberFormatException e) {
-            System.out.println("Server: Invalid input.");
+            System.out.println("Usage: <port> <id>");
             System.exit(1);
         }
     }
