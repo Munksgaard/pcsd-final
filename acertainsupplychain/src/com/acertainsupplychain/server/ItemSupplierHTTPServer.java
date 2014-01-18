@@ -19,9 +19,9 @@ public class ItemSupplierHTTPServer {
     public static void startServer(int portNo, int supplierId) {
         // Construct small test set
         HashSet<Integer> itemIds = new HashSet<Integer>();
-        itemIds.add(42);
-        itemIds.add(43);
-        itemIds.add(2);
+        for (int i=0; i<5; i++) {
+            itemIds.add(i);
+        }
 
         // Start Server
         startServer(portNo, supplierId, itemIds);
