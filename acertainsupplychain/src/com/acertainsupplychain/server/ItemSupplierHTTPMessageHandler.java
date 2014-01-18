@@ -59,8 +59,10 @@ public class ItemSupplierHTTPMessageHandler extends AbstractHandler {
 
                 }
             } catch (InvalidItemException e) {
+                e.printStackTrace();
                 response.type = ItemSupplierResponseType.FAIL;
             } catch (OrderProcessingException e) {
+                e.printStackTrace();
                 response.type = ItemSupplierResponseType.FAIL;
             }
 
