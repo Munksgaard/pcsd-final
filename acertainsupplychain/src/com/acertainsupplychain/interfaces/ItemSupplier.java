@@ -27,8 +27,11 @@ public interface ItemSupplier {
      *             - if the step is malformed or another exception occurs (you
      *             may specialize exceptions deriving from
      *             OrderProcessingException if you want).
+     * @throws InvalidItemException
+     *             - If the provided item ID is not available
      */
-    public void executeStep(OrderStep step) throws OrderProcessingException;
+    public void executeStep(OrderStep step) throws OrderProcessingException,
+                                                   InvalidItemException;
 
     /**
      * Returns the total quantity ordered per item at this item supplier.

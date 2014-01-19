@@ -12,7 +12,7 @@ import com.acertainsupplychain.utils.LogException;
 public class ItemSupplierHTTPServer {
 
     /**
-     * Run HTTP server using small predefined test set
+     * Run HTTP server using small predefined test set of item ids
      *
      * This method blocks.
      */
@@ -28,7 +28,7 @@ public class ItemSupplierHTTPServer {
     }
 
     /**
-     * Run HTTP server using externally provided map of branches/accounts.
+     * Run HTTP server using externally provided set of item ids.
      *
      * This method blocks.
      */

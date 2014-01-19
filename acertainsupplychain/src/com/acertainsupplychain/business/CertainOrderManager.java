@@ -39,6 +39,11 @@ public class CertainOrderManager implements OrderManager {
 
     private int workflowId = 0;
 
+    /**
+     * @params managerId
+     * @params itemSuppliers - map of item suppliers
+     * @throws LogException - if creating the log file failed
+     */
     public CertainOrderManager(int managerId, Map<Integer, ItemSupplier> itemSuppliers)
       throws LogException  {
         this.managerId = managerId;
@@ -90,6 +95,8 @@ public class CertainOrderManager implements OrderManager {
         threadFactory.newThread(worker).start();
 
         workflows.put(workflowId, workflow);
+
+        System.out.println(workflowId);
 
         return workflowId++;
 

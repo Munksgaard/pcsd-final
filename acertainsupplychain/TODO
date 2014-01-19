@@ -26,24 +26,30 @@ stedet. Done.
  - Introduceret managerId for at holde styr på log filer.
  - Map af itemSuppliers (id -> ItemSupplierProxy)
  - Worker klasse spawnes. Stopper hvis et step går galt.
+ - Stopper ikke alligevel. Der er meget overhead ved at lave en ny
+ - thread for hvert step, en worker laver derfor hele arbejdet
+ - hvad er en unrecoverable error? invalid item id?
 
 * Workflow
 
  - Introduceret Workflow klassen for at holde styr på workflows
  - Bliver spawnet som et thread.
  - Ingen race conditions eller lignende, Worker klassen er den eneste
- - der skriver, og den bruges kun i den ene tråd.
+   der skriver, og den bruges kun i den ene tråd.
 
 * ItemSupplierProxy/Server
 
-  - Antager at proxy og server køres på samme maskine. Nemhed. Kan
-    udvides
-  - Da interfacet er ret simpelt, og hver metode maksimalt kaster en
-    slags checked undtagelse, behøver vi ikke komplekse
-    request/response klasser.
-  - En proxy svarer til en server
-  - Hvordan finder Workeren ud af adressen på itemsupplieren?
+ - Antager at proxy og server køres på samme maskine. Nemhed. Kan
+   udvides
+ - Da interfacet er ret simpelt, og hver metode maksimalt kaster en
+   slags checked undtagelse, behøver vi ikke komplekse
+   request/response klasser.
+ - En proxy svarer til en server
+ - Hvordan finder Workeren ud af adressen på itemsupplieren?
 
 * Diverse Constants klasser og lignende.
 
-* Tilføjet OrderProcessingException til getOrderWorkflowStatus og getOrdersPerItem
+* Tilføjet OrderProcessingException til getOrderWorkflowStatus og
+  getOrdersPerItem
+
+* Lokale klienter til at tjekke ItemQuantity getOrdersPerItem

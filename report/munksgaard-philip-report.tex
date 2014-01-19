@@ -3,7 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage[top=3cm,left=3cm]{geometry}
+%\usepackage[top=3cm,left=3cm]{geometry}
 
 \usepackage{fancyhdr}  % page headers
 \usepackage{graphicx}  % \includegraphics
@@ -19,10 +19,10 @@
 
 \usepackage{microtype} % better linebreaking
 \usepackage{eso-pic}   % alternative to ku-forside
-\usepackage{libertine} % nice regular font
-\usepackage[scaled=0.83]{inconsolata} % nice teletype font
+%\usepackage{libertine} % nice regular font
+\usepackage[scaled=0.9]{inconsolata} % nice teletype font
 \usepackage{array}     % extensible array, tabular
-\usepackage{parskip}   % paragraphs 
+%\usepackage{parskip}   % paragraphs
 
 \usepackage{fancyvrb}  % Use verbatim as: !this!
 \DefineShortVerb{\!}
@@ -104,7 +104,7 @@ interfaces, as well as any classes I've made, into appropriate
 subfolders and -packages, so as to provide for a cleaner, less
 clutterede system organization.
 
-\subsection*{Question 1}
+\subsection*{Question 1 - Implementation}
 
 %% Overall implementation of OrderManager and ItemSupplier, including
 %% the following:
@@ -119,6 +119,83 @@ clutterede system organization.
 
 %% - How did you handle failures of individual components? In
 %% particular, how do you handle failure propagation?
+
+The !CertainItemSupplier! class is the basic !ItemSupplier!
+implementation. Its constructor is called with a supplier ID and set
+of valid item IDs. It is assumed that each !CertainItemSupplier! has a
+fixed list of valid item IDs that it can supply. Any requests for
+other item IDs will result in an !InvalidItemException! being
+thrown.
+
+The !executeStep! method ensures all-or-nothing atomicity by first
+making sure that all steps have the correct supplier ID, and that all
+item IDs are available at that supplier, and finally that the amount
+requested is a positive number (it does not make sense to order zero
+or a negative number of items). As the !getOrdersPerItem! method does
+not modify any data, we are not concerned with all-or-nothing
+atomicity; we just have verify that the item IDs are valid before
+querying for the amounts.
+
+The !CertainItemSupplier! class also contains a read-write lock, which
+is used to ensure before-or-after atomicity of the operations on the
+same item supplier: In !executeStep!, the write-lock is acquired after
+verifying the supplier and item IDs; in !getOrdersPerItem! it is
+acquired after we've verified the item IDs. This ensures
+before-or-after atomicity in !CertainItemSupplier!.
+
+Another approach would have been to have individual read-write locks
+for each item ID in the item supplier. However, for simplicity and
+ease-of-reasoning, we chose to have just one global lock per item
+supplier. We assume that, for this system, !executeStep!, and
+therefore modifying updates, will be called much more often than
+!getOrdersPerItem! (I feel bad for the item supplier where the
+opposite is true), so in either case, the locks acquired will most
+likely be exclusive ones. For item suppliers which provide many item
+IDs and where most incoming orders only request a few different item,
+(say, each order only requests 10 different items, and the supplier
+has a thousand different items), we expect a much higher latency using
+our method, but if each item supplier only has a small amount of different
+items, the benefits of the global-lock approach (that is, quick
+locking, no matter how many different items are requested) far
+outweigh the benefits of locking each individual item.
+
+The item supplier is then made available to clients via an RPC
+interface that uses HTTP to transfer request and response objects over
+the network, which is implemented in the !ItemSupplierHTTPServer! and
+related classes. The HTTP server is called by running the
+!startServer! method, supplying a port number, a supplier ID and a set
+of valid item IDs~\footnote{It is also possible to run the main method
+  from the command-line, simply supply port number, supplier ID and a
+  number of valid item IDs. } . Clients then use the
+!ItemSupplierProxy! class to interface with the item supplier. That
+class is called with an address (``http://127.0.0.1:8080'', for
+example) and a corresponding supplier ID. This means that each proxy
+only handles communication with a single item supplier.
+
+\paragraph{}
+
+The !CertainOrderManager! class is the basic !OrderManager!
+implementation. Its constructor is called with a manager ID and a map
+containing ItemSuppliers mapped by their IDs.
+
+The !registerOrderWorkflow! method executes the workflow
+asynchronously by launching a special !Worker! as a thread. The
+!Worker! class is supplied with a !Workflow!, a simple container class
+for data pertaining to a work flow, and tries to run the steps. The
+steps are run sequentially, meaning that, if one step fails, that step
+is retried until completion before any subsequent steps are executed.
+
+\paragraph{}
+
+Questions
+
+Durability is achieved by logging all incoming requests. For these
+purposes, I've implemented a !Logger! class, which has a !log! method
+that is used to serialize an object to XML and write it to a file on
+disk. Item supl
+hvor får de id fra
+synchronized
+
 
 
 \subsection*{Question 2}
