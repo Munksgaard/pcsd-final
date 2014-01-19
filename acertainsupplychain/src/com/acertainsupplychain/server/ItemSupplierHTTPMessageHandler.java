@@ -20,6 +20,7 @@ import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidItemException;
 import com.acertainsupplychain.utils.InvalidSupplierException;
 import com.acertainsupplychain.utils.InvalidQuantityException;
+import com.acertainsupplychain.utils.LogException;
 
 public class ItemSupplierHTTPMessageHandler extends AbstractHandler {
 
@@ -66,6 +67,8 @@ public class ItemSupplierHTTPMessageHandler extends AbstractHandler {
                 response.type = ItemSupplierResponseType.INVALID_SUPPLIER;
             } catch (InvalidQuantityException e) {
                 response.type = ItemSupplierResponseType.INVALID_QUANTITY;
+            } catch (LogException e) {
+                response.type = ItemSupplierResponseType.LOG_EXCEPTION;
             } catch (OrderProcessingException e) {
                 response.type = ItemSupplierResponseType.FAIL;
             }

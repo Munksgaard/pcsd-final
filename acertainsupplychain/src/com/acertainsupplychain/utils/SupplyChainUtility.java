@@ -59,7 +59,7 @@ public class SupplyChainUtility {
         if (exchangeState == HttpExchange.STATUS_COMPLETED) {
             return SupplyChainUtility.deserializeObject(exchange.getResponseContent().trim());
         } else {
-            throw new OrderProcessingException("Communication failed!");
+            throw new CommunicationException("Communication failed!");
         }
     }
 

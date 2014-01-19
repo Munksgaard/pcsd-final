@@ -26,6 +26,8 @@ import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidItemException;
 import com.acertainsupplychain.utils.InvalidSupplierException;
 import com.acertainsupplychain.utils.InvalidQuantityException;
+import com.acertainsupplychain.utils.CommunicationException;
+import com.acertainsupplychain.utils.LogException;
 import com.acertainsupplychain.utils.SupplyChainConstants;
 import com.acertainsupplychain.utils.SupplyChainUtility;
 
@@ -67,11 +69,17 @@ public class ItemSupplierProxy implements ItemSupplier {
                 (ItemSupplierResponse) SupplyChainUtility.SendAndRecv(this.client, exchange);
             if (response.type==ItemSupplierResponseType.FAIL) {
                 throw new OrderProcessingException("Placing order failed.");
+            } else if (response.type==ItemSupplierResponseType.INVALID_ITEM) {
+                throw new InvalidItemException("Invalid item ID");
+            } else if (response.type==ItemSupplierResponseType.INVALID_SUPPLIER) {
+                throw new InvalidSupplierException("Invalid supplier ID");
+            } else if (response.type==ItemSupplierResponseType.INVALID_QUANTITY) {
+                throw new InvalidQuantityException("Invalid quantity.");
             }
-        } catch (OrderProcessingException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new OrderProcessingException("Communication failed.");
+        } catch (IOException e) {
+            throw new CommunicationException("IO Failed.");
+        } catch (InterruptedException e) {
+            throw new CommunicationException("Interrupted.");
         }
     }
 

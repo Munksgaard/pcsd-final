@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import com.acertainsupplychain.interfaces.ItemSupplier;
 import com.acertainsupplychain.interfaces.OrderManager.StepStatus;
 import com.acertainsupplychain.utils.OrderProcessingException;
+import com.acertainsupplychain.utils.CommunicationException;
+import com.acertainsupplychain.utils.LogException;
 
 /**
  * Class used for asynchronously executing workflows.
@@ -43,10 +45,19 @@ public class Worker implements Runnable {
             ItemSupplier itemSupplier = itemSuppliers.get(supplierId);
             try {
                 itemSupplier.executeStep(step);
+
                 workflow.updateStatus(i, StepStatus.SUCCESSFUL);
-            } catch (OrderProcessingException e) {
-                workflow.updateStatus(i, StepStatus.FAILED);
+            } catch (LogException e) {
+                // This is assumed to be recoverable
                 queue.add(new Helper(i, steps.get(i)));
+            } catch (CommunicationException e) {
+                // This is assumed to be recovereable
+                queue.add(new Helper(i, steps.get(i)));
+            } catch (OrderProcessingException e) {
+                // Here, there are 4 possibilities: Invalid item id,
+                // invalid quantity, invalid supplier id, or the
+                // request itself was malformed. All are unrecoverable
+                workflow.updateStatus(i, StepStatus.FAILED);
             }
         }
 
@@ -59,6 +70,8 @@ public class Worker implements Runnable {
                 itemSupplier.executeStep(step);
                 workflow.updateStatus(help.index, StepStatus.SUCCESSFUL);
             } catch (OrderProcessingException e) {
+                // Since we already tested for unrecoverable failures,
+                // we can safely add this back into the queue.
                 queue.add(help);
             }
         }

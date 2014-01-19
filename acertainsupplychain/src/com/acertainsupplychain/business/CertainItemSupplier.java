@@ -94,7 +94,7 @@ public class CertainItemSupplier implements ItemSupplier {
             logger.log(step);
         } catch (LogException e) {
             e.getException().printStackTrace();
-            throw new OrderProcessingException("Logging failed!");
+            throw new LogException();
         }
 
         rwl.writeLock().lock();
