@@ -120,15 +120,15 @@ public class CertainOrderManager implements OrderManager {
 
             // First a test that works.
             Map<Integer, ItemSupplier> supplierMap = new HashMap<Integer, ItemSupplier>();
-            ItemSupplier supplier = new ItemSupplierProxy("http://localhost:8081", 1);
-            supplierMap.put(1, supplier);
+            ItemSupplier supplier = new ItemSupplierProxy("http://localhost:8080", 0);
+            supplierMap.put(0, supplier);
             OrderManager orderManager = new CertainOrderManager(1, supplierMap);
 
             List<OrderStep> steps = new ArrayList<OrderStep>();
             for (int i=0; i<5; i++) {
                 List<ItemQuantity> items = new ArrayList<ItemQuantity>();
                 items.add(new ItemQuantity(i, i+10));
-                steps.add(new OrderStep(1, items));
+                steps.add(new OrderStep(0, items));
             }
 
             int workflowId = orderManager.registerOrderWorkflow(steps);
@@ -148,7 +148,7 @@ public class CertainOrderManager implements OrderManager {
             for (int i=0; i<5; i++) {
                 List<ItemQuantity> items = new ArrayList<ItemQuantity>();
                 items.add(new ItemQuantity(i+1, i+10));
-                steps.add(new OrderStep(1, items));
+                steps.add(new OrderStep(0, items));
             }
 
             workflowId = orderManager.registerOrderWorkflow(steps);
