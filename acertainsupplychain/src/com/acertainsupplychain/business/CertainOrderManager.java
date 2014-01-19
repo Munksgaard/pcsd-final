@@ -106,6 +106,13 @@ public class CertainOrderManager implements OrderManager {
 
         assert itemSuppliers != null;
 
+        for (OrderStep step : steps) {
+            if (!itemSuppliers.containsKey(step.getSupplierId())) {
+                throw new OrderProcessingException("ItemSupplier not recognized: "
+                                                   + step.getSupplierId());
+            }
+        }
+
         Workflow workflow = new Workflow(workflowId, steps);
         Worker worker = new Worker(workflow, itemSuppliers);
 
