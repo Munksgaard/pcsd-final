@@ -39,26 +39,7 @@ public class Worker implements Runnable {
         LinkedList<Helper> queue = new LinkedList<Helper>();
 
         for (int i=0; i<steps.size(); i++) {
-            OrderStep step = steps.get(i);
-            int supplierId = step.getSupplierId();
-
-            ItemSupplier itemSupplier = itemSuppliers.get(supplierId);
-            try {
-                itemSupplier.executeStep(step);
-
-                workflow.updateStatus(i, StepStatus.SUCCESSFUL);
-            } catch (LogException e) {
-                // This is assumed to be recoverable
-                queue.add(new Helper(i, steps.get(i)));
-            } catch (CommunicationException e) {
-                // This is assumed to be recovereable
-                queue.add(new Helper(i, steps.get(i)));
-            } catch (OrderProcessingException e) {
-                // Here, there are 4 possibilities: Invalid item id,
-                // invalid quantity, invalid supplier id, or the
-                // request itself was malformed. All are unrecoverable
-                workflow.updateStatus(i, StepStatus.FAILED);
-            }
+            queue.add(new Helper(i, steps.get(i)));
         }
 
         while (!queue.isEmpty()) {
@@ -69,10 +50,17 @@ public class Worker implements Runnable {
             try {
                 itemSupplier.executeStep(step);
                 workflow.updateStatus(help.index, StepStatus.SUCCESSFUL);
-            } catch (OrderProcessingException e) {
-                // Since we already tested for unrecoverable failures,
-                // we can safely add this back into the queue.
+            } catch (LogException e) {
+                // This is assumed to be recoverable
                 queue.add(help);
+            } catch (CommunicationException e) {
+                // This is assumed to be recovereable
+                queue.add(help);
+            } catch (OrderProcessingException e) {
+                // Here, there are 4 possibilities: Invalid item id,
+                // invalid quantity, invalid supplier id, or the
+                // request itself was malformed. All are unrecoverable
+                workflow.updateStatus(help.index, StepStatus.FAILED);
             }
         }
     }
