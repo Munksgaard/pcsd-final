@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 
@@ -30,6 +33,20 @@ public class CertainItemSupplier implements ItemSupplier {
 
     private Map<Integer, Integer> itemQuantities;
 
+    private ReadWriteLock rwl = new ReentrantReadWriteLock();
+
+    /**
+     * Initializes the item supplier with the given set of itemIds
+     *
+     * @param supplierId
+     *  - The supplier ID for this particular supplier
+     *
+     * @param itemIds
+     *  - The set of valid item IDs that the supplier supplies
+     *
+     * @throws LogException
+     *  - if creating the log fails
+     */
     public CertainItemSupplier(int supplierId, Set<Integer> itemIds)
       throws LogException {
         this.supplierId = supplierId;
@@ -53,7 +70,7 @@ public class CertainItemSupplier implements ItemSupplier {
      *             may specialize exceptions deriving from
      *             OrderProcessingException if you want).
      */
-    public synchronized void executeStep(OrderStep step)
+    public void executeStep(OrderStep step)
       throws OrderProcessingException {
         if (step.getSupplierId() != this.supplierId) {
             throw new OrderProcessingException("Invalid supplierId: "
@@ -62,7 +79,7 @@ public class CertainItemSupplier implements ItemSupplier {
 
         for (ItemQuantity item : step.getItems()) {
             if (!itemQuantities.containsKey(item.getItemId())) {
-                throw new OrderProcessingException("Invalid itemId: "
+                throw new InvalidItemException("Invalid itemId: "
                                                    + item.getItemId());
             }
             if (item.getQuantity() <= 0) {
@@ -78,10 +95,15 @@ public class CertainItemSupplier implements ItemSupplier {
             throw new OrderProcessingException("Logging failed!");
         }
 
-        for (ItemQuantity item : step.getItems()) {
-            itemQuantities.put(item.getItemId(),
-                               itemQuantities.get(item.getItemId())
-                                + item.getQuantity());
+        rwl.writeLock().lock();
+        try {
+            for (ItemQuantity item : step.getItems()) {
+                itemQuantities.put(item.getItemId(),
+                                   itemQuantities.get(item.getItemId())
+                                   + item.getQuantity());
+            }
+        } finally {
+            rwl.writeLock().unlock();
         }
     }
 
@@ -94,7 +116,7 @@ public class CertainItemSupplier implements ItemSupplier {
      * @throws InvalidItemException
      *             - if any of the item IDs is unknown to this item supplier.
      */
-    public synchronized List<ItemQuantity> getOrdersPerItem(Set<Integer> itemIds)
+    public List<ItemQuantity> getOrdersPerItem(Set<Integer> itemIds)
       throws InvalidItemException {
         ArrayList<ItemQuantity> result = new ArrayList<ItemQuantity>();
 
@@ -103,7 +125,15 @@ public class CertainItemSupplier implements ItemSupplier {
             if (!itemQuantities.containsKey(itemId)) {
                 throw new InvalidItemException("ItemId unknown: " + itemId);
             }
-            result.add(new ItemQuantity(itemId, itemQuantities.get(itemId)));
+        }
+
+        rwl.readLock().lock();
+        try {
+            for (Integer itemId : itemIds) {
+                result.add(new ItemQuantity(itemId, itemQuantities.get(itemId)));
+            }
+        } finally {
+            rwl.readLock().unlock();
         }
 
         return result;
@@ -145,6 +175,17 @@ public class CertainItemSupplier implements ItemSupplier {
 
             result = supplier.getOrdersPerItem(itemIds);
             System.out.println("Should print three itemQuantities: 42, 43, and 2. Now 42 and 43 should have some quantities");
+            for (ItemQuantity item : result) {
+                System.out.println(item);
+            }
+
+            items = new ArrayList<ItemQuantity>();
+            items.add(new ItemQuantity(42, 3));
+            items.add(new ItemQuantity(43, 7));
+            supplier.executeStep(new OrderStep(1, items));
+
+            result = supplier.getOrdersPerItem(itemIds);
+            System.out.println("Should print three itemQuantities: 42, 43, and 2. Now 42 and 43 should have bigger quantities");
             for (ItemQuantity item : result) {
                 System.out.println(item);
             }
