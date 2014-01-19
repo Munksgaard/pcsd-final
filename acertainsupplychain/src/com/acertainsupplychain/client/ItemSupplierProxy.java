@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Properties;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.lang.InterruptedException;
 
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
@@ -22,6 +24,8 @@ import com.acertainsupplychain.utils.ItemSupplierRequest;
 import com.acertainsupplychain.utils.ItemSupplierRequest.ItemSupplierRequestType;
 import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidItemException;
+import com.acertainsupplychain.utils.InvalidSupplierException;
+import com.acertainsupplychain.utils.InvalidQuantityException;
 import com.acertainsupplychain.utils.SupplyChainConstants;
 import com.acertainsupplychain.utils.SupplyChainUtility;
 
@@ -73,7 +77,7 @@ public class ItemSupplierProxy implements ItemSupplier {
     }
 
     public List<ItemQuantity> getOrdersPerItem(Set<Integer> itemIds)
-        throws InvalidItemException, OrderProcessingException {
+      throws OrderProcessingException {
         ItemSupplierRequest req = new ItemSupplierRequest();
         req.type = ItemSupplierRequestType.GET_ORDERS_PER_ITEM;
         req.itemIds = itemIds;
@@ -88,19 +92,24 @@ public class ItemSupplierProxy implements ItemSupplier {
         exchange.setURL(server + "/itemsupplier");
         exchange.setRequestContent(requestContent);
 
-        try {
+        try{
             ItemSupplierResponse response =
                 (ItemSupplierResponse) SupplyChainUtility.SendAndRecv(this.client, exchange);
-            if (response.type==ItemSupplierResponseType.FAIL) {
-                throw new InvalidItemException("Getting orders failed");
+            if (response.type!=ItemSupplierResponseType.FAIL) {
+                throw new OrderProcessingException("Getting orders failed.");
+            } else if (response.type==ItemSupplierResponseType.INVALID_ITEM) {
+                throw new InvalidItemException("Invalid item IDs.");
+            } else if (response.type!=ItemSupplierResponseType.OK) {
+                throw new OrderProcessingException("This shouldn't happen.");
             }
+
             return response.ordersPerItem;
-        } catch (OrderProcessingException e) {
-            throw e;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new OrderProcessingException("Communication failed.");
+        } catch (IOException e) {
+            throw new OrderProcessingException("Communication failed");
+        } catch (InterruptedException e) {
+            throw new OrderProcessingException("Communication failed");
         }
+
     }
 
     public void stop() throws Exception {

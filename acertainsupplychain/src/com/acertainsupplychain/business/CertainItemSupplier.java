@@ -16,6 +16,8 @@ import java.io.FileReader;
 import com.acertainsupplychain.interfaces.ItemSupplier;
 import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidItemException;
+import com.acertainsupplychain.utils.InvalidSupplierException;
+import com.acertainsupplychain.utils.InvalidQuantityException;
 import com.acertainsupplychain.utils.LogException;
 import com.acertainsupplychain.utils.Logger;
 import com.acertainsupplychain.utils.SupplyChainUtility;
@@ -73,17 +75,17 @@ public class CertainItemSupplier implements ItemSupplier {
     public void executeStep(OrderStep step)
       throws OrderProcessingException {
         if (step.getSupplierId() != this.supplierId) {
-            throw new OrderProcessingException("Invalid supplierId: "
-                                               + step.getSupplierId());
+            throw new InvalidSupplierException("Invalid supplierId: "
+                                            + step.getSupplierId());
         }
 
         for (ItemQuantity item : step.getItems()) {
             if (!itemQuantities.containsKey(item.getItemId())) {
                 throw new InvalidItemException("Invalid itemId: "
-                                                   + item.getItemId());
+                                               + item.getItemId());
             }
             if (item.getQuantity() <= 0) {
-                throw new OrderProcessingException("Invalid quantity: "
+                throw new InvalidQuantityException("Invalid quantity: "
                                                    + item.getQuantity());
             }
         }
@@ -147,7 +149,7 @@ public class CertainItemSupplier implements ItemSupplier {
             itemIds.add(2);
 
             // Test constructor
-            CertainItemSupplier supplier = new CertainItemSupplier(1, itemIds);
+            ItemSupplier supplier = new CertainItemSupplier(1, itemIds);
 
             List<ItemQuantity> result = supplier.getOrdersPerItem(itemIds);
             System.out.println("Should print three empty itemQuantities: 42, 43, and 2");

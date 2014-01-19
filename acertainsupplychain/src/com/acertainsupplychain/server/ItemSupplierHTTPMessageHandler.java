@@ -18,6 +18,8 @@ import com.acertainsupplychain.utils.ItemSupplierRequest;
 import com.acertainsupplychain.utils.SupplyChainUtility;
 import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidItemException;
+import com.acertainsupplychain.utils.InvalidSupplierException;
+import com.acertainsupplychain.utils.InvalidQuantityException;
 
 public class ItemSupplierHTTPMessageHandler extends AbstractHandler {
 
@@ -59,10 +61,12 @@ public class ItemSupplierHTTPMessageHandler extends AbstractHandler {
 
                 }
             } catch (InvalidItemException e) {
-                e.printStackTrace();
-                response.type = ItemSupplierResponseType.FAIL;
+                response.type = ItemSupplierResponseType.INVALID_ITEM;
+            } catch (InvalidSupplierException e) {
+                response.type = ItemSupplierResponseType.INVALID_SUPPLIER;
+            } catch (InvalidQuantityException e) {
+                response.type = ItemSupplierResponseType.INVALID_QUANTITY;
             } catch (OrderProcessingException e) {
-                e.printStackTrace();
                 response.type = ItemSupplierResponseType.FAIL;
             }
 
