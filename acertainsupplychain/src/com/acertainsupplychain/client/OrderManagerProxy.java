@@ -119,7 +119,7 @@ public class OrderManagerProxy implements OrderManager {
             List<OrderStep> steps = new ArrayList<OrderStep>();
             for (int i=0; i<5; i++) {
                 List<ItemQuantity> items = new ArrayList<ItemQuantity>();
-                items.add(new ItemQuantity(i, i+10));
+                items.add(new ItemQuantity(i-1, i+10));
                 steps.add(new OrderStep(0, items));
             }
 
