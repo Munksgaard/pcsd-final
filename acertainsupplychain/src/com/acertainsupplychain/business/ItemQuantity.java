@@ -36,4 +36,8 @@ public final class ItemQuantity {
     public int getQuantity() {
         return quantity;
     }
+
+    public String toString() {
+        return "<ItemQuantity: " + itemId + ", " + quantity + ">";
+    }
 }
