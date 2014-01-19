@@ -53,42 +53,6 @@ public class CertainOrderManager implements OrderManager {
 
     }
 
-    private class Worker implements Runnable {
-
-        private Workflow workflow;
-
-        public Worker(Workflow workflow, Map<Integer, ItemSupplier> itemSuppliers) {
-            this.workflow = workflow;
-        }
-
-        public void run() {
-            List<OrderStep> steps = workflow.getSteps();
-            for (int i=0; i<steps.size(); i++) {
-                OrderStep step = steps.get(i);
-                int supplierId = step.getSupplierId();
-                if (!itemSuppliers.containsKey(supplierId)) {
-                    System.out.println("itemSuppliers indeholder ikke nøglen: " + supplierId);
-                    System.out.println(itemSuppliers);
-                    workflow.updateStatus(i, StepStatus.FAILED);
-                    break;
-                }
-
-                ItemSupplier itemSupplier = itemSuppliers.get(supplierId);
-                try {
-                    itemSupplier.executeStep(step);
-                } catch (OrderProcessingException e) {
-                    System.out.println("OrderProcessingException");
-                    e.printStackTrace();
-                    workflow.updateStatus(i, StepStatus.FAILED);
-                    break;
-                }
-
-                workflow.updateStatus(i, StepStatus.SUCCESSFUL);
-            }
-        }
-
-    }
-
     /**
      * Registers an order workflow with the order manager.
      *
