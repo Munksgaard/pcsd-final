@@ -71,7 +71,6 @@ public class ItemSupplierProxy implements ItemSupplier {
         } catch (OrderProcessingException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new OrderProcessingException("Communication failed.");
         }
     }
