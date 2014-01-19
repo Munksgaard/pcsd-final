@@ -48,7 +48,7 @@ public class Logger {
         }
     }
 
-    public void log(Object obj) throws LogException {
+    public synchronized void log(Object obj) throws LogException {
         try {
             out.write(SupplyChainUtility.serializeObject(obj) + "\n");
             out.flush();
