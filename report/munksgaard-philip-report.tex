@@ -97,13 +97,6 @@
 
 \section*{Programming Part}
 
-\subsection*{Description of the Implementation}
-
-First of all, I have decided to move the provided classes and
-interfaces, as well as any classes I've made, into appropriate
-subfolders and -packages, so as to provide for a cleaner, less
-clutterede system organization.
-
 \subsection*{Question 1 - Implementation}
 
 %% Overall implementation of OrderManager and ItemSupplier, including
@@ -125,14 +118,16 @@ implementation. Its constructor is called with a supplier ID and set
 of valid item IDs. It is assumed that each !CertainItemSupplier! has a
 fixed list of valid item IDs that it can supply. Any requests for
 other item IDs will result in an !InvalidItemException! being
-thrown.
+thrown. Apart from the !InvalidItemException!, we've also implemented
+a number of other subexceptions to !OrderProcessingException!, that
+make communication and error handling easier.
 
-The !executeStep! method ensures all-or-nothing atomicity by first
-making sure that all steps have the correct supplier ID, and that all
-item IDs are available at that supplier, and finally that the amount
-requested is a positive number (it does not make sense to order zero
-or a negative number of items). As the !getOrdersPerItem! method does
-not modify any data, we are not concerned with all-or-nothing
+The !executeStep! method ensures \emph{all-or-nothing atomicity} by
+first making sure that all steps have the correct supplier ID, and
+that all item IDs are available at that supplier, and finally that the
+amount requested is a positive number (it does not make sense to order
+zero or a negative number of items). As the !getOrdersPerItem! method
+does not modify any data, we are not concerned with all-or-nothing
 atomicity; we just have verify that the item IDs are valid before
 querying for the amounts.
 
@@ -179,24 +174,44 @@ implementation. Its constructor is called with a manager ID and a map
 containing ItemSuppliers mapped by their IDs.
 
 The !registerOrderWorkflow! method executes the workflow
-asynchronously by launching a special !Worker! as a thread. The
-!Worker! class is supplied with a !Workflow!, a simple container class
-for data pertaining to a work flow, and tries to run the steps. The
-steps are run sequentially, meaning that, if one step fails, that step
-is retried until completion before any subsequent steps are executed.
+asynchronously by launching a special !Worker! class in a separate
+thread. The !Worker! class is supplied with a !Workflow!, a simple
+container class for data pertaining to a work flow, and tries to run
+the steps. All steps are continually tried until they succeed, except
+if some unrecoverable error occurs, such as requesting an invalid item
+or supplier ID, an invalid quantity or a malformed request. When a
+step is successful or failed, the thread writes to a shared !Workflow!
+object, which can be queried through the !getOrderWorkflowStatus!
+method of !CertainOrderManager!. Since we can assume, cf. the
+assignment handout, that we always either get a response from the item
+supplier, or that the item supplier actually failed, we are thus using
+\emph{at-most-once} RPC semantics between the order manager and item
+supplier.
 
 \paragraph{}
 
-Questions
+Durability is achieved by logging all incoming requests to the
+!CertainOrderManager! and !CertainItemSupplier! classes. For these
+purposes, a !Logger! class has been implemented. It has a !log! method
+(which is !synchronized! in order to avoid interleaving outputs) that
+is used to serialize an object to XML and write it to a file on
+disk. Each !CertainOrderManager! and !CertainItemSupplier! has a
+unique ID that is used to name a log file. For the
+!CertainItemSupplier!, the log simply consists of all the !OrderStep!
+objects that the !executeStep! method has received: The objects are
+simply serialized into XML and appended to the log file (which is
+flushed before returning). Similarly for the !List<OrderStep>! objects
+that !registerOrderWorkflow! receives. This way, durability is
+ensured, and recovery is as simple as reading the requests from the
+log and executing them. It should be noted that, for the purposes of
+this assignment, any already existing log files are deleted when
+starting the !Logger!. Adapting the !CertainItemSupplier! and
+!CertainOrderManager! classes to check for and recover from
+preexisting log files, however, is a trivial matter.
 
-Durability is achieved by logging all incoming requests. For these
-purposes, I've implemented a !Logger! class, which has a !log! method
-that is used to serialize an object to XML and write it to a file on
-disk. Item supl
-hvor får de id fra
-synchronized
+\paragraph{}
 
-
+Failure propagation.
 
 \subsection*{Question 2}
 
