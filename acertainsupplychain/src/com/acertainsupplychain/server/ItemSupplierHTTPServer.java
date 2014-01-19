@@ -55,16 +55,23 @@ public class ItemSupplierHTTPServer {
 
     public static void main(String[] args) {
         // Parse command-line arguments
-        if (args.length != 2) {
-            System.out.println("Usage: <port> <id>");
+        if (args.length < 3) {
+            System.out.println("Usage: <port> <supplierId> <itemId> ...");
             System.exit(1);
         }
 
+        Set<Integer> itemIds = new HashSet<Integer>();
+        for (int i=2; i<args.length; i++) {
+            itemIds.add(Integer.parseInt(args[i]));
+        }
+
+        System.out.println(itemIds);
+
         // Start server if possible
         try {
-            startServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+            startServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]), itemIds);
         } catch (NumberFormatException e) {
-            System.out.println("Usage: <port> <id>");
+            System.out.println("Usage: <port> <id> <itemId> ...");
             System.exit(1);
         }
     }
