@@ -48,7 +48,7 @@ public class OrderManagerHTTPMessageHandler extends AbstractHandler {
             try {
                 switch (req.type) {
                 case REGISTER_ORDER_WORKFLOW:
-                    orderManager.registerOrderWorkflow(req.steps);
+                    response.workflowId = orderManager.registerOrderWorkflow(req.steps);
                     response.type = OrderManagerResponseType.OK;
                     break;
 
