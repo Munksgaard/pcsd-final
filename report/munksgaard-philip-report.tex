@@ -95,6 +95,82 @@
 \fancyhead[LE,RO]{PCSD, Final Exam \\ \today }
 \pagestyle{fancy}
 
+\section*{Theory part}
+
+\subsection*{Question 1 - Proximity}
+
+We wish to examine the performance of an algorithm that merges two big
+data sets $R$ and $S$ of $N_1$ and $N_2$ records, respectively, based
+on comparison of a $k$ word key. Each record in either data set is $l$
+words long. We assume that, by ``merge'', an actual merge-join
+operation is the requested operation. We use $M$ to denote the amount
+of memory available.
+
+\subsubsection*{CPU Cost}
+
+The data sets are very large, but let us assume that they aren't
+larger than $M^2$, such that we can use two-phase merging
+algorithms. Now, even though the data sets are (presumably) already in
+some kind of database, we cannot reasonably expect them to be
+pre-sorted. If that were the case, a simple merge-join would require
+at most $(N_1 + N_2) \cdot k$ word comparisons to determine a merge of the
+two data sets, as well as $\textrm{max}(N_1, N_2) \cdot (2l - k)$ CPU
+operations to write the data, since the merged records have size $2l -
+k$. If they aren't sorted we can perform either a merge-join where we
+first sort the two inputs, which gives an added cost of $O(N_1 \cdot
+log(N_1) + N_2 \cdot log(N_2))$, or a hash-join. The hash-join algorithm
+uses a hashing function to compute the hash value for the
+key. Assuming it takes $h$ word operations to compute the
+hash-function, we need to read and compute the hash function for each
+relation, $h \cdot (N_1 + N_2)$; store the relations in buckets and write
+those buckets to disk $l(N_1+N_2)$, before finally reading the buckets
+from disk and joining them with a one-pass join, $l(N_1 + N_2)$.
+
+If the data sets are so large that we cant apply two-phase merging, we
+have to use multi-phase merging. For a given intenger $d$, let us
+consider $d$-way merging. For simplicity, we'll concentrate on the
+merge-sort algorithm. Here, the difficulty is in sorting the data
+sets. The idea is to take the two data sets $R$ and $S$, split them
+into a number of groups, $N$, such that we can hold exactly $N+1$
+blocks in memory at a time, and recursively sort them. When the groups
+are sorted, merge them by reading one block from each group into
+memory at at time. Sorting takes $O((N_1 + N_2) \cdot log_N(N_1 +
+N_2))$ time, and merging is linear in the number of total records.
+
+However, for these kinds of operations, the time spent by the CPU on
+sorting, computing hash functions, merging and the like, is more or
+less completely overshadowed by the cost of disk I/O.
+
+\subsubsection*{I/O cost}
+
+%% Analyse the I/O cost of this algorithm. Use B to denote the size of
+%% the memory blocks (pages) transferred between the disk and main
+%% memory and M to denote the size of main memory; both measured in
+%% words.
+
+Now we wish to examine the I/O cost of merging the data sets using a
+$d$-phase merging algorithm. We let $B$ denote the page size (distinct
+from the $B(\ldots)$ we use to denote the amount of pages something
+occupies), and $M$ denote the size of main memory; both measured in
+words.
+
+First we need to figure out how many passes are needed to sort the
+data sets into $(M-1)/B$ blocks. Using the algorithm described in
+section 15.8.2 of \emph{Database Systems: The Complete Book}, we
+simply run it with increasing values of $k$, until the result is
+smaller than $M$. By letting $d = k$, we know how many phases we need
+to go through. Then, we can simply use the calculations from that same
+chapter, giving us a total of $(2d-1)(B(R) + B(S))$ disk I/O's, where
+$B(R) = lN_1 / B$, meaning that $R$ takes up $lN_1$ words of space,
+which is the same as $lN_1 / B$ pages, and analogously for S, just
+using $N_2$ instead.
+
+\subsubsection*{Address-translation cost}
+
+%% Analyse the address-translation costs of this algorithm. Use W to
+%% denote the size of the address- translation cache measured in words
+%% and P to denote the branching factor of the nodes in the page
+%% table.
 \section*{Programming Part}
 
 \subsection*{Question 1 - Implementation}
