@@ -110,9 +110,6 @@
 %% - How did you make workflow processing asynchronous at the
 %% OrderManager?
 
-%% - How did you handle failures of individual components? In
-%% particular, how do you handle failure propagation?
-
 The !CertainItemSupplier! class is the basic !ItemSupplier!
 implementation. Its constructor is called with a supplier ID and set
 of valid item IDs. It is assumed that each !CertainItemSupplier! has a
@@ -149,10 +146,10 @@ likely be exclusive ones. For item suppliers which provide many item
 IDs and where most incoming orders only request a few different item,
 (say, each order only requests 10 different items, and the supplier
 has a thousand different items), we expect a much higher latency using
-our method, but if each item supplier only has a small amount of different
-items, the benefits of the global-lock approach (that is, quick
-locking, no matter how many different items are requested) far
-outweigh the benefits of locking each individual item.
+our method, but if each item supplier only has a small amount of
+different items, the benefits of the global-lock approach (that is,
+not having to acquire $n$ different locks for $n$ items) far outweigh
+the benefits of locking each individual item.
 
 The item supplier is then made available to clients via an RPC
 interface that uses HTTP to transfer request and response objects over
@@ -211,7 +208,16 @@ preexisting log files, however, is a trivial matter.
 
 \paragraph{}
 
-Failure propagation.
+%% - How did you handle failures of individual components? In
+%% particular, how do you handle failure propagation?
+
+Failure of an item supplier only affects those !OrderStep!s that are
+directed towards that item supplier. As described above, the !Worker!
+class will simply keep trying to execute the step
+indefinitely. Exceptions at the item supplier is communicated through
+the !ItemSupplierResponse! class (along with all the other relevant
+response information), so the worker always knows if, for example it
+has supplied an invalid item ID, or similar.
 
 \subsection*{Question 2}
 
@@ -226,6 +232,25 @@ Failure propagation.
 
 %% Argue for the performance of your model.
 
+As discussed above, a simple global-locking mechanism is used in the
+!CertainItemSupplier! class to ensure atomicity. As such,
+serializability is trivially achieved, as is correctness. However, as
+pointed out above, it also has certain drawbacks for some specific use
+cases. Our method also ensures that deadlocks cannot occur, although
+there is a slight possibility of starvation. However, as described
+earlier, in a system like this, we expect far more order registrations
+than order overview requests (for instance, we might expect suppliers
+to execute !getOrdersPerItem! just a few times per day, in order to
+figure out what to produce, package and send, whereas many hundreds or
+thousands of customers might issue order registrations each day), so
+the exclusive locks wont likely be starved by shared locks.
+
+As mentioned, the alternative would be to have one lock for each item,
+which could also quite easily be done, but the benefits of increased
+concurrency might be offset by the large overhead of having to acquire
+many different locks each time an order request is
+issued. We would also have to take deadlocks into account, but they
+can be quite easily prevented by first sorting the locks requested.
 
 \subsection*{Question 3}
 
@@ -233,6 +258,22 @@ Failure propagation.
 %% ItemSupplier? For each of the two scenarios, explain necessary
 %% interaction with other components to archieve recovery, how you
 %% would use the log, why it is sufficient.
+
+Recovery for both the !CertainOrderManager! and the
+!CertainItemSupplier! is done by reading the log produced by the
+!Logger! class. Since they are the only implementations of their
+respective interfaces that actually do any work, they are the only
+ones who need to log and recover data. As described above, the output
+to the log simply consists of serialized versions of all incoming
+requests. Thus, recovering is simply a matter of reading and executing
+all the requests from the log in question.
+
+Failures of the !OrderManager! servers should be handled by the
+clients. Simply trying another server, or retrying the same server
+should suffice. Similarly, and as mentioned above, the !Worker!
+threads that !CertainOrderManager! uses to facilitate execution of
+steps on item suppliers, simply keeps retrying until they get a
+connection to their corresponding server.
 
 
 \subsection*{Question 4}
