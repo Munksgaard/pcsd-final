@@ -211,6 +211,14 @@ partition records and map them to processors, respectively.
 
 \subsubsection*{Hash function Domains and Ranges}
 
+The function $h_1$ is used to partition the records of $R$ and $S$
+into $k$ buckets each. That means, that $h_1$s domain is the key used
+to compare the two relations, while its range is the numbers $1\cdots
+k$. Similarly, $h_2$ is used to map the record buckets to processors,
+which then join a pair of record buckets $R_i, S_i$. Therefore, the
+domain of $h_2$ is the numbers $1 \cdots k$, while the range is the
+numbers $1 \cdots p$.
+
 \section*{Programming Part}
 
 \subsection*{Question 1 - Implementation}
