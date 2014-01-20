@@ -113,18 +113,19 @@ larger than $M^2$, such that we can use two-phase merging
 algorithms. Now, even though the data sets are (presumably) already in
 some kind of database, we cannot reasonably expect them to be
 pre-sorted. If that were the case, a simple merge-join would require
-at most $(N_1 + N_2) \cdot k$ word comparisons to determine a merge of the
-two data sets, as well as $\textrm{max}(N_1, N_2) \cdot (2l - k)$ CPU
-operations to write the data, since the merged records have size $2l -
-k$. If they aren't sorted we can perform either a merge-join where we
-first sort the two inputs, which gives an added cost of $O(N_1 \cdot
-log(N_1) + N_2 \cdot log(N_2))$, or a hash-join. The hash-join algorithm
-uses a hashing function to compute the hash value for the
-key. Assuming it takes $h$ word operations to compute the
+at most $(N_1 + N_2) \cdot k$ word comparisons to determine a merge of
+the two data sets, as well as $\textrm{max}(N_1, N_2) \cdot (2l - k)$
+CPU operations to write the data, since the merged records have size
+$2l - k$. If they aren't sorted we can perform either a merge-join
+where we first sort the two inputs, which gives an added cost of
+$O(N_1 \cdot log(N_1) + N_2 \cdot log(N_2))$, or a hash-join. The
+hash-join algorithm uses a hashing function to compute the hash value
+for the key. Assuming it takes $h$ word operations to compute the
 hash-function, we need to read and compute the hash function for each
-relation, $h \cdot (N_1 + N_2)$; store the relations in buckets and write
-those buckets to disk $l(N_1+N_2)$, before finally reading the buckets
-from disk and joining them with a one-pass join, $l(N_1 + N_2)$.
+relation, $h \cdot (N_1 + N_2)$; store the relations in buckets and
+write those buckets to disk $l(N_1+N_2)$, before finally reading the
+buckets from disk and joining them with a one-pass join, $l(N_1 +
+N_2)$.
 
 If the data sets are so large that we cant apply two-phase merging, we
 have to use multi-phase merging. For a given intenger $d$, let us
@@ -218,6 +219,74 @@ k$. Similarly, $h_2$ is used to map the record buckets to processors,
 which then join a pair of record buckets $R_i, S_i$. Therefore, the
 domain of $h_2$ is the numbers $1 \cdots k$, while the range is the
 numbers $1 \cdots p$.
+
+\subsubsection*{Functional description}
+
+The algorithm works by first using the hash function $h_1$, to
+partition the input data in $R$ and $S$ into $k$ buckets each, such
+that we have buckets $R_1, R_2, \ldots, R_k$ and $S_1, S_2, \dots,
+S_k$. Each bucket is distributed out to one of the $p$ processors,
+using the $h_2$ hashing function, such that, if $h_2(1) = 2$,
+processor $p_2$ merges buckets $R_1$ and $S_1$. We expect $k<p$, such
+that each processor has at least one bucket to merge. The merge is
+then executed locally, using the techniques described in section 15.3
+of \emph{Database Systems: The Complete Book}.
+
+TODO: billede
+
+On a lower level, the initial partitioning could be performed by a
+separate processor, which would immediately send the partitioned
+groups to the corresponding merge processors. This way, we wont have
+to worry about synchronization issues with regards to the
+partitioning. For the purposes of this assignment, we will assume that
+results are simply kept in memory at the merging processors, since we
+don't know if they are supposed to be further processed, passed on or
+simply stored. Taking the initial costs for such last steps into
+account is a trivial matter (simply add one I/O write, or message pass
+for each block), so we'll leave it out of any further computations.
+
+\subsubsection*{I/O cost}
+
+We wish to describe how many I/Os each processor performs. For the
+purposes of this assignment, we'll assume uniform hashing, and that
+the processors receive the partitioned groups from a separate
+partitioning server.
+
+First of all, for each pair of relations $R_i$, $S_i$ that a
+particular processor has to merge we have to receive the whole bucket
+before we can perform any merging. Hence, each processor, upon
+receiving partitioned group blocks from the partitioning server, has
+to write them to disk, until we know that all blocks have been
+received. Assuming uniform hashing, that adds up to $(B(R) + B(S)) /
+p$ writes, where $B(X)$ is the amount of blocks required to store the
+relation $X$. Then, depending on the size of the processors memory, it
+has to perform a single-pass merge or a multi-pass merge. Let's assume
+that a two-pass merge is necessary. Using a normal merge-join or
+hash-join uses $3(B(R) + B(S))$ disk I/Os, but given certain
+circumstances (specifically, that the expected size of buckets isn't
+too big), we could also employ the more effective \emph{hybrid
+  hash-join}, which would give us $(3 - 2M/ B(S))(B(R) + B(S))$ disk
+I/O.
+
+\subsubsection*{Message cost}
+
+Each processor only has to receive a message each time the
+partitioning server has a full block: Each time that happens the
+partitioning server simply sends the block and starts on a new one. If
+the block size is $B$ and we assume uniform hashing, that means that
+the partitioning server has to send $(B(R) + B(S)) / B$ messages in
+total, which also means that each merging server receives $(B(R) +
+B(S)) / pB$ messages.
+
+For the purposes of this exercise, let's further assume that each
+server has to pass the resulting merged relation on to another (disk)
+server for storage. That would mean that, in addition to the messages
+received as described above, each server also has to send the merged
+relations. Doing so requires another $\textrm{max}(N_R, N_S) / (F(R,
+S) \cdot p)$ messages, where $F(R,S)$ is the size in blocks of a
+merged relation (more concretely, if we're given the two relations
+$R(X,Y)$ and $S(Y,Z)$, $F(R,S)$ is the size of the resulting joined
+relation $T(X,Y,Z)$).
 
 \section*{Programming Part}
 
