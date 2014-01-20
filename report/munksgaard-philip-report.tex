@@ -158,11 +158,11 @@ First we need to figure out how many passes are needed to sort the
 data sets into $(M-1)/B$ blocks. Using the algorithm described in
 section 15.8.2 of \emph{Database Systems: The Complete Book}, we
 simply run it with increasing values of $k$, until the result is
-smaller than $M$. By letting $d = k$, we know how many phases we need
-to go through. Then, we can simply use the calculations from that same
+smaller than $M$. We get a number $k$, which is how many passes we
+need to make. Then, we can simply use the calculations from that same
 chapter, giving us a total of $(2d-1)(B(R) + B(S))$ disk I/O's, where
 $B(R) = lN_1 / B$, meaning that $R$ takes up $lN_1$ words of space,
-which is the same as $lN_1 / B$ pages, and analogously for S, just
+which is the same as $lN_1 / B$ pages, and analogously for $S$, just
 using $N_2$ instead.
 
 \subsubsection*{Address-translation cost}
@@ -179,7 +179,29 @@ a much more meaningful metric, and translation between the two is
 trivial, given a specific architecture) and $P$ to denote the
 branching factor of the nodes in the page table tree.
 
-\subsection*{Parallelism}
+First, let us consider the sorting phases. Each block is read into
+memory once. For each word in the block, we have at least one
+TLB-miss, meaning that we'll have to do a page-lookup, taking $O(d)$
+time ($d$ being the height of the page table). For simplicity, we'll
+assume that sorting is possible in a single pass. Then, by using a
+depth-first search, we minimize the number of TLB-misses that occur:
+when the size of each merge-group is less than $W$, we don't have any
+more TLB-misses in that branch, giving us a rough estimate of
+$O(n\cdot (log (n) - log(W))$ TLB-misses.
+
+When merging the groups, we can expect an almost linear amount of
+TLB-misses, since each head in the group only misses once, and,
+assuming that $W$ is larger than the amount of groups, we can keep the
+address of each head in the TLB until it is no longer used.
+
+It should be noted though, that many advanced techniques of modern
+processors invalidate or, at the very least, makes it hard to reason
+about the address-translation costs of particular algorithms. For
+example, memory prefetching makes it hard to predict how many misses
+there will be, and the increasingly larger caches might completely
+invalidate some concerns about cache misses.
+
+\subsection*{Question 2 - Parallelism}
 
 \section*{Programming Part}
 
