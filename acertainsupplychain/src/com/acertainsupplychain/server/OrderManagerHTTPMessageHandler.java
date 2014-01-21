@@ -14,10 +14,16 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import com.acertainsupplychain.interfaces.OrderManager;
 import com.acertainsupplychain.utils.SupplyChainUtility;
 import com.acertainsupplychain.utils.OrderProcessingException;
-import com.acertainsupplychain.utils.InvalidItemException;
 import com.acertainsupplychain.utils.OrderManagerRequest;
 import com.acertainsupplychain.utils.OrderManagerResponse;
 import com.acertainsupplychain.utils.OrderManagerResponse.OrderManagerResponseType;
+import com.acertainsupplychain.utils.OrderProcessingException;
+import com.acertainsupplychain.utils.InvalidItemException;
+import com.acertainsupplychain.utils.InvalidSupplierException;
+import com.acertainsupplychain.utils.InvalidQuantityException;
+import com.acertainsupplychain.utils.InvalidWorkflowException;
+import com.acertainsupplychain.utils.LogException;
+
 
 public class OrderManagerHTTPMessageHandler extends AbstractHandler {
 
@@ -59,7 +65,15 @@ public class OrderManagerHTTPMessageHandler extends AbstractHandler {
 
                 }
             } catch (InvalidItemException e) {
-                response.type = OrderManagerResponseType.FAIL;
+                response.type = OrderManagerResponseType.INVALID_ITEM;
+            } catch (InvalidSupplierException e) {
+                response.type = OrderManagerResponseType.INVALID_SUPPLIER;
+            } catch (InvalidQuantityException e) {
+                response.type = OrderManagerResponseType.INVALID_QUANTITY;
+            } catch (LogException e) {
+                response.type = OrderManagerResponseType.LOG_EXCEPTION;
+            } catch (InvalidWorkflowException e) {
+                response.type = OrderManagerResponseType.INVALID_WORKFLOW;
             } catch (OrderProcessingException e) {
                 response.type = OrderManagerResponseType.FAIL;
             }

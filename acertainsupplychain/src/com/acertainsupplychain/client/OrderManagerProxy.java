@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.io.FileInputStream;
 import java.lang.Thread;
+import java.io.IOException;
+import java.lang.InterruptedException;
 
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
@@ -25,6 +27,12 @@ import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidItemException;
 import com.acertainsupplychain.utils.SupplyChainConstants;
 import com.acertainsupplychain.utils.SupplyChainUtility;
+import com.acertainsupplychain.utils.InvalidItemException;
+import com.acertainsupplychain.utils.InvalidSupplierException;
+import com.acertainsupplychain.utils.InvalidQuantityException;
+import com.acertainsupplychain.utils.CommunicationException;
+import com.acertainsupplychain.utils.LogException;
+import com.acertainsupplychain.utils.InvalidWorkflowException;
 
 public class OrderManagerProxy implements OrderManager {
 
@@ -61,14 +69,24 @@ public class OrderManagerProxy implements OrderManager {
         try {
             OrderManagerResponse response =
                 (OrderManagerResponse) SupplyChainUtility.SendAndRecv(this.client, exchange);
-            if (response.type==OrderManagerResponseType.FAIL) {
-                throw new OrderProcessingException("Registering order workflow failed.");
+            if (response.type==OrderManagerResponseType.INVALID_ITEM) {
+                throw new InvalidItemException("Invalid item ID.");
+            } else if (response.type==OrderManagerResponseType.FAIL) {
+                throw new OrderProcessingException("Placing order failed.");
+            } else if (response.type==OrderManagerResponseType.INVALID_ITEM) {
+                throw new InvalidItemException("Invalid item ID");
+            } else if (response.type==OrderManagerResponseType.INVALID_SUPPLIER) {
+                throw new InvalidSupplierException("Invalid supplier ID");
+            } else if (response.type==OrderManagerResponseType.INVALID_QUANTITY) {
+                throw new InvalidQuantityException("Invalid quantity.");
+            } else if (response.type==OrderManagerResponseType.INVALID_WORKFLOW) {
+                throw new InvalidWorkflowException();
             }
             return response.workflowId;
-        } catch (OrderProcessingException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new OrderProcessingException("Communication failed.");
+        } catch (IOException e) {
+            throw new CommunicationException("IO Failed.");
+        } catch (InterruptedException e) {
+            throw new CommunicationException("Interrupted.");
         }
     }
 
@@ -92,13 +110,15 @@ public class OrderManagerProxy implements OrderManager {
             OrderManagerResponse response =
                 (OrderManagerResponse) SupplyChainUtility.SendAndRecv(this.client, exchange);
             if (response.type==OrderManagerResponseType.FAIL) {
-                throw new InvalidItemException("Getting order workflow status failed.");
+                throw new OrderProcessingException("Getting order workflow status failed.");
+            } else if (response.type==OrderManagerResponseType.INVALID_WORKFLOW) {
+                throw new InvalidWorkflowException("Getting order workflow status failed.");
             }
             return response.orderWorkflowStatus;
-        } catch (OrderProcessingException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new OrderProcessingException("Communication failed.");
+        } catch (IOException e) {
+            throw new OrderProcessingException("Communication failed");
+        } catch (InterruptedException e) {
+            throw new OrderProcessingException("Communication failed");
         }
     }
 
