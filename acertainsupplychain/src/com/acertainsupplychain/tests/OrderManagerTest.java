@@ -53,7 +53,7 @@ public class OrderManagerTest {
 
             workflowId = orderManager.registerOrderWorkflow(steps);
 
-            Thread.sleep(2000);
+            Thread.sleep(5000);
 
             statuses = orderManager.getOrderWorkflowStatus(workflowId);
 
