@@ -18,7 +18,7 @@ public class OrderManagerTest {
             System.out.println("Starting OrderManagerTest...");
             System.out.println("You need to start the ItemSupplierHTTPServer on port 8080, id 0, and item IDs 0, 1, 2, 3, 4. and the OrderManagerHTTPServer on port 8000 with id 0\n");
 
-            System.out.print("First a test to see that simply functionality works... ");
+            System.out.print("First a test to see that simple functionality works... ");
 
             Map<Integer, ItemSupplier> supplierMap = new HashMap<Integer, ItemSupplier>();
             ItemSupplier supplier = new ItemSupplierProxy("http://localhost:8080", 0);
