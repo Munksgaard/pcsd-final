@@ -110,19 +110,23 @@ of memory available.
 
 \subsubsection*{CPU Cost}
 
-The data sets are very large, but let us assume that they aren't
-larger than $M^2$, such that we can use two-phase merging
-algorithms. Now, even though the data sets are (presumably) already in
-some kind of database, we cannot reasonably expect them to be
-pre-sorted. If that were the case, a simple merge-join would require
-at most $(N_1 + N_2) \cdot k$ word comparisons to determine a merge of
-the two data sets, as well as $\textrm{max}(N_1, N_2) \cdot (2l - k)$
-CPU operations to write the data, since the merged records have size
-$2l - k$. If they aren't sorted we can perform either a merge-join
-where we first sort the two inputs, which gives an added cost of
-$O(N_1 \cdot log(N_1) + N_2 \cdot log(N_2))$, or a hash-join. The
-hash-join algorithm uses a hashing function to compute the hash value
-for the key. Assuming it takes $h$ word operations to compute the
+Let us first examine CPU cost. The data sets are very large, but let
+us assume that they aren't larger than $M^2$, such that we can use
+two-phase merging algorithms.
+
+Now, even though the data sets are (presumably) already in some kind
+of database, we cannot reasonably expect them to be pre-sorted. If
+that were the case, a simple merge-join would require at most $(N_1 +
+N_2) \cdot k$ word comparisons to determine a merge of the two data
+sets, as well as $\texttt{max}(N_1, N_2) \cdot (2l - k)$ CPU
+operations to write the data, since the merged records have size $2l -
+k$.
+
+If they aren't sorted, we can perform either a merge-join where we
+first sort the two inputs, which gives an added cost of $O(N_1 \cdot
+log(N_1) + N_2 \cdot log(N_2))$, or a hash-join. The hash-join
+algorithm uses a hashing function to compute the hash value for the
+key. Assuming it takes $h$ word operations to compute the
 hash-function, we need to read and compute the hash function for each
 relation, $h \cdot (N_1 + N_2)$; store the relations in buckets and
 write those buckets to disk $l(N_1+N_2)$, before finally reading the
@@ -134,15 +138,17 @@ have to use multi-phase merging. For a given intenger $d$, let us
 consider $d$-way merging. For simplicity, we'll concentrate on the
 merge-sort algorithm. Here, the difficulty is in sorting the data
 sets. The idea is to take the two data sets $R$ and $S$, split them
-into a number of groups, $N$, such that we can hold exactly $N+1$
-blocks in memory at a time, and recursively sort them. When the groups
-are sorted, merge them by reading one block from each group into
-memory at at time. Sorting takes $O((N_1 + N_2) \cdot log_N(N_1 +
-N_2))$ time, and merging is linear in the number of total records.
+into $N$ groups such that we can hold exactly $N+1$ blocks in memory
+at a time, and recursively sort the groups using merge sort. When the
+groups are sorted, merge them by reading one block from each group
+into memory at time and comparing and merging the heads of each
+block. Sorting takes $O((N_1 + N_2) \cdot log_N(N_1 + N_2))$ time, and
+merging is linear in the number of total records.
 
 However, for these kinds of operations, the time spent by the CPU on
 sorting, computing hash functions, merging and the like, is more or
-less completely overshadowed by the cost of disk I/O.
+less completely overshadowed by the cost of disk I/O. Hence, let us
+examine the I/O cost.
 
 \subsubsection*{I/O cost}
 
@@ -151,22 +157,23 @@ less completely overshadowed by the cost of disk I/O.
 %% memory and M to denote the size of main memory; both measured in
 %% words.
 
-Now we wish to examine the I/O cost of merging the data sets using a
-$d$-phase merging algorithm. We let $B$ denote the page size (distinct
-from the $B(\ldots)$ we use to denote the amount of pages something
-occupies), and $M$ denote the size of main memory; both measured in
-words.
+We wish to examine the I/O cost of merging the data sets using a
+multi-phase merging algorithm. We let $B$ denote the page size
+(distinct from the $B(\ldots)$, which we use to denote the number of
+pages something occupies), and $M$ denote the size of main memory;
+both measured in words.
 
 First we need to figure out how many passes are needed to sort the
-data sets into $(M-1)/B$ blocks. Using the algorithm described in
-section 15.8.2 of \emph{Database Systems: The Complete Book}, we
-simply run it with increasing values of $k$, until the result is
-smaller than $M$. We get a number $k$, which is how many passes we
-need to make. Then, we can simply use the calculations from that same
-chapter, giving us a total of $(2d-1)(B(R) + B(S))$ disk I/O's, where
-$B(R) = lN_1 / B$, meaning that $R$ takes up $lN_1$ words of space,
-which is the same as $lN_1 / B$ pages, and analogously for $S$, just
-using $N_2$ instead.
+data sets into $(M-1)/B$ blocks. We can use the algorithm described in
+section 15.8.2 of \emph{Database Systems: The Complete Book} to decide
+the number of passes needed, by simply trying the algorithm with
+increasing values for $k$ until the result is smaller than $M$. When
+we've found an appropriate value for $k$, we simply use the
+calculations from that same chapter to calculate the I/O cost of the
+multi-phase merge-sort, giving us a total of $(2k-1)(B(R) + B(S))$
+disk I/O's, where $B(R) = lN_1 / B$, meaning that $R$ takes up $lN_1$
+words of space, which is the same as $lN_1 / B$ pages, and analogously
+for $S$, just using $N_2$ instead.
 
 \subsubsection*{Address-translation cost}
 
@@ -185,12 +192,12 @@ branching factor of the nodes in the page table tree.
 First, let us consider the sorting phases. Each block is read into
 memory once. For each word in the block, we have at least one
 TLB-miss, meaning that we'll have to do a page-lookup, taking $O(d)$
-time ($d$ being the height of the page table). For simplicity, we'll
-assume that sorting is possible in a single pass. Then, by using a
-depth-first search, we minimize the number of TLB-misses that occur:
-when the size of each merge-group is less than $W$, we don't have any
-more TLB-misses in that branch, giving us a rough estimate of
-$O(n\cdot (log (n) - log(W))$ TLB-misses.
+time ($d$ being the height of the page table, $log_P(W)$). For
+simplicity, we'll assume that sorting is possible in a single pass. By
+using a depth-first merge-sort we minimize the number of TLB-misses
+that occur: When the size of each merge-group is less than $W$, we
+don't have any more TLB-misses in that branch, giving us a rough
+estimate of $O(n\cdot (log (n) - log(W))$ TLB-misses.
 
 When merging the groups, we can expect an almost linear amount of
 TLB-misses, since each head in the group only misses once, and,
@@ -209,8 +216,8 @@ invalidate some concerns about cache misses.
 In this question, we examine the properties of a hash-join operations
 for two big relations $R$ and $S$, with $N_R$ and $N_S$ records,
 respectively, on a shared-nothing database system with $p$
-processors. The algorithm uses two hash functions $h_1$ and $h_2$ to
-partition records and map them to processors, respectively.
+processors. The algorithm uses two hash functions, $h_1$ and $h_2$,
+that partition records and map them to processors, respectively.
 
 \subsubsection*{Hash function Domains and Ranges}
 
@@ -229,28 +236,31 @@ partition the input data in $R$ and $S$ into $k$ buckets each, such
 that we have buckets $R_1, R_2, \ldots, R_k$ and $S_1, S_2, \dots,
 S_k$. Each bucket is distributed out to one of the $p$ processors,
 using the $h_2$ hashing function, such that, if $h_2(1) = 2$,
-processor $p_2$ merges buckets $R_1$ and $S_1$. We expect $k<p$, such
-that each processor has at least one bucket to merge. The merge is
-then executed locally, using the techniques described in section 15.3
-of \emph{Database Systems: The Complete Book}.
+processor $p_2$ merges buckets $R_1$ and $S_1$. We expect $k \geq p$,
+such that each processor has at least one bucket to merge. The merge
+is then executed locally, using the techniques described in section
+15.3 of \emph{Database Systems: The Complete Book}.
 
 \begin{figure}
   \center
   \includegraphics[scale=0.6]{parallelmerge.eps}
   \caption{Drawing, showing how the hash-functions, buckets and
     processors interact in our version of parallel hash-merge.}
+  \label{fig1}
 \end{figure}
 
-On a lower level, the initial partitioning could be performed by a
-separate processor, which would immediately send the partitioned
-groups to the corresponding merge processors. This way, we wont have
-to worry about synchronization issues with regards to the
-partitioning. For the purposes of this assignment, we will assume that
-results are simply kept in memory at the merging processors, since we
+On a lower level, the initial partitioning is be performed by a
+separate processor, which immediately sends the partitioned groups to
+the corresponding merge processors. This way, we wont have to worry
+about synchronization issues with regards to the partitioning. For the
+purposes of this assignment, we will assume that resulting merged
+buckets are simply kept in memory at the merging processors, since we
 don't know if they are supposed to be further processed, passed on or
-simply stored. Taking the initial costs for such last steps into
+simply stored. Taking the additional costs for such last steps into
 account is a trivial matter (simply add one I/O write, or message pass
 for each block), so we'll leave it out of any further computations.
+
+The overall flow of data has been depicted in figure \ref{fig1}.
 
 \subsubsection*{I/O cost}
 
@@ -260,12 +270,12 @@ the processors receive the partitioned groups from a separate
 partitioning server.
 
 First of all, for each pair of relations $R_i$, $S_i$ that a
-particular processor has to merge we have to receive the whole bucket
+particular processor has to merge, we have to receive the whole bucket
 before we can perform any merging. Hence, each processor, upon
 receiving partitioned group blocks from the partitioning server, has
 to write them to disk, until we know that all blocks have been
 received. Assuming uniform hashing, that adds up to $(B(R) + B(S)) /
-p$ writes, where $B(X)$ is the amount of blocks required to store the
+p$ writes, where $B(X)$ is the number of blocks required to store the
 relation $X$. Then, depending on the size of the processors memory, it
 has to perform a single-pass merge or a multi-pass merge. Let's assume
 that a two-pass merge is necessary. Using a normal merge-join or
@@ -273,11 +283,11 @@ hash-join uses $3(B(R) + B(S))$ disk I/Os, but given certain
 circumstances (specifically, that the expected size of buckets isn't
 too big), we could also employ the more effective \emph{hybrid
   hash-join}, which would give us $(3 - 2M/ B(S))(B(R) + B(S))$ disk
-I/O.
+I/Os.
 
 \subsubsection*{Message cost}
 
-Each processor only has to receive a message each time the
+Each merging processor has to receive a message each time the
 partitioning server has a full block: Each time that happens the
 partitioning server simply sends the block and starts on a new one. If
 the block size is $B$ and we assume uniform hashing, that means that
@@ -322,22 +332,23 @@ make communication and error handling easier.
 The !executeStep! method ensures \emph{all-or-nothing atomicity} by
 first making sure that all steps have the correct supplier ID, and
 that all item IDs are available at that supplier, and finally that the
-amount requested is a positive number (it does not make sense to order
+quantities requested are positive (it does not make sense to order
 zero or a negative number of items). As the !getOrdersPerItem! method
-does not modify any data, we are not concerned with all-or-nothing
-atomicity; we just have verify that the item IDs are valid before
+does not modify any data, as long as !executeStep! does its job
+properly we are not particularly concerned with all-or-nothing
+atomicity here; we just have verify that the item IDs are valid before
 querying for the amounts.
 
 The !CertainItemSupplier! class also contains a read-write lock, which
-is used to ensure before-or-after atomicity of the operations on the
-same item supplier: In !executeStep!, the write-lock is acquired after
-verifying the supplier and item IDs; in !getOrdersPerItem! it is
-acquired after we've verified the item IDs. This ensures
-before-or-after atomicity in !CertainItemSupplier!.
+is used to ensure \emph{before-or-after atomicity} of the operations
+on the same item supplier: In !executeStep!, the write-lock is
+acquired after verifying the supplier and item IDs; in
+!getOrdersPerItem! it is acquired after we've verified the item
+IDs. This ensures before-or-after atomicity in !CertainItemSupplier!.
 
-Another approach would have been to have individual read-write locks
-for each item ID in the item supplier. However, for simplicity and
-ease-of-reasoning, we chose to have just one global lock per item
+Instead of a global lock, we might have used individual read-write
+locks for each item ID in the item supplier. However, for simplicity
+and ease-of-reasoning, we chose to have just one global lock per item
 supplier. We assume that, for this system, !executeStep!, and
 therefore modifying updates, will be called much more often than
 !getOrdersPerItem! (I feel bad for the item supplier where the
@@ -351,18 +362,18 @@ different items, the benefits of the global-lock approach (that is,
 not having to acquire $n$ different locks for $n$ items) far outweigh
 the benefits of locking each individual item.
 
-The item supplier is then made available to clients via an RPC
-interface that uses HTTP to transfer request and response objects over
-the network, which is implemented in the !ItemSupplierHTTPServer! and
-related classes. The HTTP server is called by running the
-!startServer! method, supplying a port number, a supplier ID and a set
-of valid item IDs~\footnote{It is also possible to run the main method
-  from the command-line, simply supply port number, supplier ID and a
-  number of valid item IDs. } . Clients then use the
-!ItemSupplierProxy! class to interface with the item supplier. That
-class is called with an address (``http://127.0.0.1:8080'', for
-example) and a corresponding supplier ID. This means that each proxy
-only handles communication with a single item supplier.
+The item supplier is made available to clients via an RPC interface
+that transfers request and response objects over the HTTP protocol. It
+is implemented in the !ItemSupplierHTTPServer! and related
+classes. The HTTP server is called by running the !startServer!
+method, supplying a port number, a supplier ID and a set of valid item
+IDs~\footnote{It is also possible to run the main method from the
+  command-line, simply supply port number, supplier ID and a number of
+  valid item IDs. } . Clients then use the !ItemSupplierProxy! class
+to interface with the item supplier. That class is called with an
+address (``http://127.0.0.1:8080'', for example) and a corresponding
+supplier ID. This means that each proxy only handles communication
+for a single item supplier.
 
 \paragraph{}
 
@@ -439,23 +450,22 @@ has supplied an invalid item ID, or similar.
 
 As discussed above, a simple global-locking mechanism is used in the
 !CertainItemSupplier! class to ensure atomicity. As such,
-serializability is trivially achieved, as is correctness. However, as
-pointed out above, it also has certain drawbacks for some specific use
-cases. Our method also ensures that deadlocks cannot occur, although
-there is a slight possibility of starvation. However, as described
-earlier, in a system like this, we expect far more order registrations
-than order overview requests (for instance, we might expect suppliers
-to execute !getOrdersPerItem! just a few times per day, in order to
-figure out what to produce, package and send, whereas many hundreds or
-thousands of customers might issue order registrations each day), so
-the exclusive locks wont likely be starved by shared locks.
+serializability is trivially achieved, as is correctness, and it
+ensures that deadlocks cannot occur. The only problem is a slight
+possibility of starvation. However, as described earlier, in a system
+like this, we expect far more order registrations than order overview
+requests (for instance, we might expect suppliers to execute
+!getOrdersPerItem! just a few times per day, in order to figure out
+what to produce, package and send, whereas many hundreds or thousands
+of customers might issue order registrations each day), so the
+exclusive locks wont likely be starved by shared locks.
 
 As mentioned, the alternative would be to have one lock for each item,
 which could also quite easily be done, but the benefits of increased
 concurrency might be offset by the large overhead of having to acquire
-many different locks each time an order request is
-issued. We would also have to take deadlocks into account, but they
-can be quite easily prevented by first sorting the locks requested.
+many different locks each time an order request is issued. We would
+also have to take deadlocks into account, but they could be prevented
+by first sorting the locks requested.
 
 \subsection*{Question 3}
 
