@@ -481,6 +481,40 @@ connection to their corresponding server.
 
 %% How you tested error conditions and failures of multiple comonents.
 
+The main testing takes part in the two classes !ItemSupplierTest! and
+!OrderManagerTest!, which are part of the !test! subpackage of
+!com.acertainsupplychain!.
+
+The !ItemSupplierTest! tests the main functionality of the
+!CertainItemSupplier! class. It does not use the RPC interface, but
+instead it directly tests some of the business logic of the item
+supplier. After building the entire project (by running
+``\texttt{make}''), running it is a simple matter of executing the
+command ``\texttt{ItemSupplierTest}''. It tests the
+different error conditions that we expect from !CertainItemSupplier!,
+as well as atomicity and isolation (which is tested by spamming the
+item supplier from two different threads).
+
+The !OrderManagerTest! is not quite as comprehensive, but tests the
+entire RPC infrastructure, and that execution of workflows is indeed
+done asynchronously. Running it is a bit more complex, as it requires
+correctly configured and running instances of !OrderManagerHTTPServer!
+and !ItemSupplierHTTPServer!. To start, run ``\texttt{make
+  TestServer1}'' and ``\texttt{make TestServer2}'' in separate shells,
+then run ``\texttt{make OrderManagerTest}'' in a third shell.
+
+Testing for error conditions is covered by the tests mentioned
+previously. However, one bit that we haven't touched on, is failure
+and recovery when servers go down. However, it is easy to run the
+!OrderManagerTest! in such a way that it demonstrates the order
+managers ability to keep retrying requests when encountering
+recoverable failures. Simply omit starting the
+!ItemSupplierHTTPServer! before running the !OrderManagerTest!. You
+should see a lot of error messages in the !OrderManagerHTTPServer!
+window (these are output by the jetty client, with no apparent way to
+turn them off...), but starting the !ItemSupplierHTTPServer! should
+make them stop, and make the test proceed as usual.
+
 
 \subsection*{Question 5}
 
