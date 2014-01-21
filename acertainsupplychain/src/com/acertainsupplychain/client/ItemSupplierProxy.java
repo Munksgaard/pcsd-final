@@ -104,7 +104,7 @@ public class ItemSupplierProxy implements ItemSupplier {
         try{
             ItemSupplierResponse response =
                 (ItemSupplierResponse) SupplyChainUtility.SendAndRecv(this.client, exchange);
-            if (response.type!=ItemSupplierResponseType.FAIL) {
+            if (response.type==ItemSupplierResponseType.FAIL) {
                 throw new OrderProcessingException("Getting orders failed.");
             } else if (response.type==ItemSupplierResponseType.INVALID_ITEM) {
                 throw new InvalidItemException("Invalid item IDs.");
