@@ -574,6 +574,16 @@ always using the same number of local and remote clients, meaning that
 if there are 20 total clients, 10 of those will be remote and the
 remaining 10 local.
 
+Experimentation do not take into account that some order workflows
+might not be finished. No attention is paid to whether or not
+workflows actually ever finish. However, the tests running
+!getOrderWorkflowStatus! simulates a real user inspecting workflow
+statuses, so leaving the actual check out of the experiments should
+not have a big effect on how things play out. Besides, since workflow
+execution is asynchronous, we'd expect customers to submit plenty of
+concurrent workflows, with more or less immediate concern as to
+whether or not they finish.
+
 \subsection*{Results}
 
 Our experiments show that the item suppliers throughput scales
