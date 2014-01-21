@@ -17,3 +17,13 @@ ItemSupplierTest:
 
 OrderManagerTest:
 	java -ea -cp $(LIBDIR)/*:bin com.acertainsupplychain.tests.OrderManagerTest
+
+TestServer1:
+	java -ea -cp $(LIBDIR)/*:bin \
+	  com.acertainsupplychain.server.ItemSupplierHTTPServer 8080 \
+	  0 0 1 2 3 4 5
+
+TestServer2:
+	java -ea -cp $(LIBDIR)/*:bin \
+	  com.acertainsupplychain.server.OrderManagerHTTPServer 8000 0 \
+	  "http://localhost:8080"
