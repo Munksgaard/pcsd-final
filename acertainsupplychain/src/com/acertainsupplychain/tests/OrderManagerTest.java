@@ -34,7 +34,7 @@ public class OrderManagerTest {
 
             int workflowId = orderManager.registerOrderWorkflow(steps);
 
-            Thread.sleep(2000);
+            Thread.sleep(5000);
 
             List<StepStatus> statuses = orderManager.getOrderWorkflowStatus(workflowId);
             for (StepStatus status : statuses) {
