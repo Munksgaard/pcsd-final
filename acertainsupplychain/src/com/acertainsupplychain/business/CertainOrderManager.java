@@ -19,6 +19,7 @@ import com.acertainsupplychain.utils.OrderProcessingException;
 import com.acertainsupplychain.utils.InvalidWorkflowException;
 import com.acertainsupplychain.utils.Logger;
 import com.acertainsupplychain.utils.LogException;
+import com.acertainsupplychain.utils.InvalidSupplierException;
 import com.acertainsupplychain.utils.SupplyChainUtility;
 
 /**
@@ -77,7 +78,7 @@ public class CertainOrderManager implements OrderManager {
 
         for (OrderStep step : steps) {
             if (!itemSuppliers.containsKey(step.getSupplierId())) {
-                throw new OrderProcessingException("ItemSupplier not recognized: "
+                throw new InvalidSupplierException("ItemSupplier not recognized: "
                                                    + step.getSupplierId());
             }
         }
@@ -85,18 +86,11 @@ public class CertainOrderManager implements OrderManager {
         Workflow workflow = new Workflow(workflowId, steps);
         Worker worker = new Worker(workflow, itemSuppliers);
 
-        try {
-            logger.log(steps);
-        } catch (LogException e) {
-            e.getException().printStackTrace();
-            throw new OrderProcessingException("Logging failed!");
-        }
+        logger.log(steps);
 
         threadFactory.newThread(worker).start();
 
         workflows.put(workflowId, workflow);
-
-        System.out.println(workflowId);
 
         return workflowId++;
 
