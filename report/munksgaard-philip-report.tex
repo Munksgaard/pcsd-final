@@ -64,6 +64,8 @@
 %\setlength{\parindent}{0pt}
 \def\arraystretch{2}
 
+\newcommand{\shellcmd}[1]{\\\indent\indent\texttt{\footnotesize\# #1}\\}
+
 \title{
   \vspace{5em}
   Principles of Computer Systems Design \\
@@ -232,7 +234,12 @@ that each processor has at least one bucket to merge. The merge is
 then executed locally, using the techniques described in section 15.3
 of \emph{Database Systems: The Complete Book}.
 
-TODO: billede
+\begin{figure}
+  \center
+  \includegraphics[scale=0.6]{parallelmerge.eps}
+  \caption{Drawing, showing how the hash-functions, buckets and
+    processors interact in our version of parallel hash-merge.}
+\end{figure}
 
 On a lower level, the initial partitioning could be performed by a
 separate processor, which would immediately send the partitioned
@@ -372,7 +379,12 @@ if some unrecoverable error occurs, such as requesting an invalid item
 or supplier ID, an invalid quantity or a malformed request. When a
 step is successful or failed, the thread writes to a shared !Workflow!
 object, which can be queried through the !getOrderWorkflowStatus!
-method of !CertainOrderManager!. Since we can assume, cf. the
+method of !CertainOrderManager!. Another approach would have been to
+spawn separate workers for each step of the workflow, but we opted for
+this approach instead, since spawning threads can have considerable
+overhead.
+
+Since we can assume, cf. the
 assignment handout, that we always either get a response from the item
 supplier, or that the item supplier actually failed, we are thus using
 \emph{at-most-once} RPC semantics between the order manager and item
@@ -515,11 +527,81 @@ window (these are output by the jetty client, with no apparent way to
 turn them off...), but starting the !ItemSupplierHTTPServer! should
 make them stop, and make the test proceed as usual.
 
+As mentioned earlier, clients have to handle server failures
+themselves, so running the !OrderManagerTest! without a running
+!OrderManagerHTTPServer! will result in exceptions. However, they can
+quite easily be handled, as has been done in !CertainOrderManager!
+(which is essentially a acting as a client to an item supplier proxy).
+
 
 \subsection*{Question 5}
 
 %% Design, describe and execute an experiment that shows how your
 %% implementation of a single ItemSupplier behaves as concurrency is
 %% increased. Mention: Setup, Results. Also figures.
+
+Performance experiments takes place in the
+!com.acertainsupplychain.performance! package. Running the
+!PerformanceTest! classe (optionally tweaking the !numlocalthreads!
+and !numremotethreads! parameters first) will run the performance
+tests against a running set of servers. To simplify, running
+\texttt{make performance} runs the appropriate servers (remember to
+kill them afterwards with \texttt{kill java}).
+
+\subsection*{Setup}
+
+The experiment took place on a laptop with the following
+specifications: Intel i5 @ 4$\times$2.6GHz, 12GB RAM.
+
+To carry out the experiments, one item supplier server is run, and
+initialized with 100 items (consecutively numbered from 0 to 99, for
+simplicity). A number of local and remote clients (using
+!ItemSupplierProxy! and !OrderManagerProxy! respectively) then perform
+some work on the item supplier.
+
+Each worker runs for 200 warm up operations, followed by the actual
+500 operations used in measurements. The local worker issues 10\%
+!getOrdersPerItem! requests and 90\% !executeStep! requests. This is
+supposed to mimic a situation where the local worker issues a lot of
+requests, but only checks how many orders have been received a few
+times per day. Similarly for the remote worker, which issues 40\%
+!registerOrderWorkflow! requests and 60\% !getOrderWorkflowStatus!
+requests. We assume that, once customers have ordered their items,
+they'll have a tendency to check the order status a couple of times,
+to figure out whether or not they are successful. Each operation uses
+a randomly generated data set. For the purposes of this test, we are
+always using the same number of local and remote clients, meaning that
+if there are 20 total clients, 10 of those will be remote and the
+remaining 10 local.
+
+\subsection*{Results}
+
+Our experiments show that the item suppliers throughput scales
+somewhat well with the amount of clients, but also that latency
+generally goes up, the more clients we have. The fact that throughput
+generally rises with the amount of clients (at least for the
+measurements we've performed) indicate that the local computations
+performed by the item supplier isn't yet a major hurdle. Of course, at
+some point, throughput is going to drop off, when the time spent
+waiting for I/O is overcome by the time required to computing on the
+server. However, since the computations performed by the item supplier
+are relatively benign, we expect throughput to be able to climb for a
+while. However, while throughput may rise, latency is almost
+definitely going go up, the more clients we use. At some point, it
+would be preferable to implement some kind of caching, or even
+server replication, in order to bring general latency down.
+
+
+\begin{figure}
+  \center 
+  \includegraphics[scale=0.6]{throughput.eps}
+  \caption{Throughput for the item supplier.}
+\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.6]{latency.eps}
+  \caption{Latency for the item supplier.}
+\end{figure}
 
 \end{document}
