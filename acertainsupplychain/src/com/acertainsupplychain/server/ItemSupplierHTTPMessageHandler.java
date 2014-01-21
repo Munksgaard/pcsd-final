@@ -45,10 +45,9 @@ public class ItemSupplierHTTPMessageHandler extends AbstractHandler {
         ItemSupplierResponse response = new ItemSupplierResponse();
 
         if (requestURI != null && requestURI.toLowerCase().equals(SERVICE_PREFIX)) {
-            ItemSupplierRequest req =
-                (ItemSupplierRequest) SupplyChainUtility.extractRequest(httpRequest);
-
             try {
+                ItemSupplierRequest req =
+                    (ItemSupplierRequest) SupplyChainUtility.extractRequest(httpRequest);
                 switch (req.type) {
                 case EXECUTE_STEP:
                     itemSupplier.executeStep(req.step);
@@ -70,6 +69,8 @@ public class ItemSupplierHTTPMessageHandler extends AbstractHandler {
             } catch (LogException e) {
                 response.type = ItemSupplierResponseType.LOG_EXCEPTION;
             } catch (OrderProcessingException e) {
+                response.type = ItemSupplierResponseType.FAIL;
+            } catch (Exception e) {
                 response.type = ItemSupplierResponseType.FAIL;
             }
 
